@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { verifyWithGoogle, GoogleVerificationResult } from "~~/lib/providers/google-oauth";
+import { verifyWithGoogle, type GoogleVerificationResult } from "~~/lib/providers/google-oauth";
 import { generateEphemeralKey } from "~~/lib/ephemeral-key";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { VerificationStatus } from "~~/lib/types";
@@ -63,7 +63,7 @@ export function useStudentVerification() {
       try {
         result = await verifyWithGoogle(ephemeralKey);
       } catch (err: any) {
-        if (err.message?.includes("popup")) {
+        if (err.message?.includes("popup") || err.message?.includes("cancelled")) {
           throw new Error("Google sign-in was cancelled. Please try again.");
         }
         throw err;
@@ -77,14 +77,12 @@ export function useStudentVerification() {
 
       // 4. Submit to smart contract
       setState(s => ({ ...s, status: "submitting_tx", progress: 85 }));
-
-      const { contractProof } = result;
       
       writeContract({
         address: zeroKlueContract.address,
         abi: zeroKlueContract.abi,
         functionName: "verifyAndMint",
-        args: [contractProof.proofHex, contractProof.publicInputs],
+        args: [result.contractProof.proofHex, result.contractProof.publicInputs],
       });
 
     } catch (err: any) {
