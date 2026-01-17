@@ -1,7 +1,7 @@
 use jwt::JWT;
 use std::hash::poseidon2::Poseidon2;
 
-global MAX_PARTIAL_DATA_LENGTH: u32 = 640; // signed data length after partial SHA
+global MAX_PARTIAL_DATA_LENGTH: u32 = 1024; // signed data length after partial SHA (increased from 640 to handle larger Google JWTs)
 global MAX_DOMAIN_LENGTH: u32 = 64;
 global MAX_EMAIL_LENGTH: u32 = 128;
 global NONCE_LENGTH: u32 = 77;

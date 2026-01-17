@@ -464,7 +464,7 @@ export const JWTCircuitHelper = {
       jwt: idToken,
       pubkey: jwtPubkey,
       shaPrecomputeTillKeys: ["email", "email_verified", "nonce"],
-      maxSignedDataLength: 640,
+      maxSignedDataLength: 1024,
     });
 
     // 2. Load circuit artifact

@@ -51,7 +51,7 @@ export const generateProof = async (
     jwt: idToken,
     pubkey: jwtPubkey,
     shaPrecomputeTillKeys: ["email", "email_verified", "nonce"],
-    maxSignedDataLength: 640,
+    maxSignedDataLength: 1024, // Increased from 640 to handle larger Google JWTs
   });
 
   const domainUint8Array = new Uint8Array(MAX_DOMAIN_LENGTH);
@@ -90,9 +90,9 @@ export const generateProof = async (
   console.log("[ZeroKlue] Starting proof generation...");
   const startTime = performance.now();
   const { witness } = await noir.execute(inputs as InputMap);
-  
+
   if (onProgress) onProgress({ stage: "proving", progress: 60, message: "Proving (identifying)..." });
-  
+
   const { proof, publicInputs } = await backend.generateProof(witness);
   const provingTime = performance.now() - startTime;
 
