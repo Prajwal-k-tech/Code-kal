@@ -29,11 +29,13 @@ export const OfferCard = ({ offer, isUnlocked, minimal = false }: OfferCardProps
       <div className="relative h-full flex flex-col p-6 text-white z-10 justify-between">
         {/* Header */}
         <div className="flex justify-between items-start">
-           <img 
-             src={offer.logo} 
-             alt={`${offer.partnerName} logo`} 
-             className="w-16 h-16 object-contain filter drop-shadow-md bg-white/10 rounded-xl p-2 backdrop-blur-sm"
-           />
+           <div className="bg-white rounded-xl p-2 shadow-lg w-16 h-16 flex items-center justify-center">
+             <img 
+               src={offer.logo} 
+               alt={`${offer.partnerName} logo`} 
+               className="w-full h-full object-contain"
+             />
+           </div>
            {!minimal && (
              <div className="badge bg-black/20 border-0 text-white backdrop-blur-md">
                {offer.category}
