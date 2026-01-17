@@ -84,15 +84,20 @@ codekal/
 │           └── hooks/
 │               └── useStudentVerification.ts
 │
+├── docs/                      # 📚 All documentation
+│   ├── QUICKSTART.md          # 👈 Start here
+│   ├── FRONTEND_GUIDE.md      # Frontend dev guide
+│   ├── ROADMAP.md             # What's left to build
+│   ├── ENGINEERING_PLAN.md    # Technical architecture
+│   ├── PITCH.md               # Project pitch
+│   ├── HACKATHON_QA.md        # Judge Q&A prep
+│   ├── PRD.md                 # Product requirements
+│   ├── TEAM_PLAN.md           # Task division
+│   └── TECHNICAL_DECISIONS.md # Why JWT not OTP
+│
 ├── packages/                  # ⚠️ DEPRECATED - don't use
 │   ├── backend/               # Old OTP approach - not used
 │   └── circuits/              # Old EdDSA circuit - not used
-│
-├── FRONTEND_GUIDE.md          # 👈 Frontend dev start here
-├── QUICKSTART.md              # Setup instructions
-├── ROADMAP.md                 # What's left to build
-├── ENGINEERING_PLAN.md        # Technical architecture
-└── HACKATHON_QA.md            # Judge Q&A prep
 ```
 
 ## 🚀 Quick Start
@@ -144,13 +149,21 @@ forge test -vvv
 
 ## 📋 Documentation
 
+All docs are in the [`docs/`](docs/) folder:
+
 | Document | Description |
 |----------|-------------|
-| [FRONTEND_GUIDE.md](FRONTEND_GUIDE.md) | Frontend development guide |
-| [QUICKSTART.md](QUICKSTART.md) | Setup instructions |
-| [ROADMAP.md](ROADMAP.md) | What's left to build |
-| [ENGINEERING_PLAN.md](ENGINEERING_PLAN.md) | Technical architecture |
-| [HACKATHON_QA.md](HACKATHON_QA.md) | Judge Q&A prep |
+| [QUICKSTART.md](docs/QUICKSTART.md) | 👈 **Start here** - 5-minute setup |
+| [FRONTEND_GUIDE.md](docs/FRONTEND_GUIDE.md) | Frontend dev guide with code examples |
+| [ROADMAP.md](docs/ROADMAP.md) | What's left to build |
+| [ENGINEERING_PLAN.md](docs/ENGINEERING_PLAN.md) | Technical architecture |
+| [PITCH.md](docs/PITCH.md) | Project pitch for judges |
+| [HACKATHON_QA.md](docs/HACKATHON_QA.md) | Judge Q&A prep |
+
+### Reference Code
+Our ZK proof generation is adapted from **[StealthNote](https://github.com/nicholashc/stealthnote)** - an MIT-licensed project that verifies Google JWTs in zero-knowledge. Key files to study:
+- [`app/lib/providers/google-oauth.ts`](https://github.com/nicholashc/stealthnote/blob/main/app/lib/providers/google-oauth.ts)
+- [`app/lib/circuits/jwt.ts`](https://github.com/nicholashc/stealthnote/blob/main/app/lib/circuits/jwt.ts)
 
 ## 📚 Key Technologies
 
