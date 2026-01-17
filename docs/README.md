@@ -7,6 +7,14 @@
 
 ## 🚀 Start Here
 
+### 🤖 For New LLMs (Context Switch)
+**[LLM_HANDOFF_CONTEXT.md](./LLM_HANDOFF_CONTEXT.md)** ← **READ THIS FIRST**
+- Complete project context in one place
+- Critical technical details
+- What NOT to change (NFT-LIKE interface, OAuth flow)
+- Common pitfalls to avoid
+- Quick reference for everything
+
 ### For New Frontend Developers
 1. **[FRONTEND_TASKS.md](./FRONTEND_TASKS.md)** ← **START HERE**
    - Complete task list with priorities
@@ -25,10 +33,11 @@
    - React patterns to follow
 
 ### For Understanding the System
-4. **[TECHNICAL_DEEP_DIVE.md](./TECHNICAL_DEEP_DIVE.md)**
-   - Complete system architecture
-   - How ZK proofs work
-   - OAuth → Circuit → Contract flow
+4. **[TECHNICAL_DEEP_DIVE.md](./TECHNICAL_DEEP_DIVE.md)** ← **BEST FOR LEARNING**
+   - Complete ZK/blockchain explanations
+   - System architecture deep dive
+   - How everything works under the hood
+   - Cryptographic primitives explained
    
 5. **[PRD.md](./PRD.md)**
    - Product requirements
@@ -95,38 +104,45 @@
 
 ---
 
-## 🎯 For LLM Handoff (Switching to Antigravity)
+## 🎯 For LLM Handoff (Switching to Another LLM)
 
-### Context You Need
-1. **NFT-LIKE Interface:** The contract intentionally does NOT inherit ERC721. It has `balanceOf()` and `transferFrom()` but they're simplified (gas-efficient). This is NOT a bug.
-   
-2. **No Timeout/Cancellation Needed:** StealthNote has 2-min timeout and window-closed detection for OAuth popups. We reviewed their code and determined this is NOT necessary for our MVP. Skip it.
+**👉 READ [LLM_HANDOFF_CONTEXT.md](./LLM_HANDOFF_CONTEXT.md) FIRST**
 
-3. **Merchants Handle "One Discount Per Email":** Our contract tracks verification per wallet. Merchants enforce "one discount per email" in their own databases (off-chain). This is documented in FRONTEND_TASKS.md.
+This document contains:
+- Complete project context
+- Critical technical decisions explained
+- What NOT to change and why
+- Files user saved (google-oauth.ts)
+- Common pitfalls to avoid
+- Business viability ($1M ARR path)
+- Testing and verification commands
 
-4. **Error Handling:** We already validate Google Workspace accounts and email verification in `google-oauth.ts`. Just need to display these errors in the UI.
+### Quick Context Summary
+1. **NFT-LIKE Interface:** Intentional design (NOT a bug). Don't try to "fix" it.
+2. **No OAuth Timeout Needed:** Reviewed StealthNote, determined unnecessary for MVP.
+3. **Merchants Handle Discounts Off-Chain:** They track "one per email" in their databases.
+4. **Backend 100% Complete:** Smart contracts, ZK circuit, OAuth - all tested and working.
+5. **Frontend Needs UI:** 8-12 hours of work. Task list in FRONTEND_TASKS.md.
 
-5. **Business Viability:** Calculated in FRONTEND_TASKS.md. $1M ARR achievable in 18-24 months with 500 merchants @ $166/mo avg. LTV:CAC ratio of 17.9:1.
-
-### Files to Check First
-- `zeroklue-app/packages/foundry/contracts/ZeroKlue.sol` - Main contract
-- `zeroklue-app/packages/foundry/test/ZeroKlue.t.sol` - Test suite (all passing)
-- `zeroklue-app/packages/nextjs/lib/providers/google-oauth.ts` - OAuth logic (lines 40-49 for validation)
-- `docs/FRONTEND_TASKS.md` - Complete task breakdown
+### Essential Files
+- **LLM_HANDOFF_CONTEXT.md** - Everything you need to know
+- **FRONTEND_TASKS.md** - What to build next
+- **TECHNICAL_DEEP_DIVE.md** - How everything works
+- **PROJECT_AUDIT.md** - What's complete
 
 ### Key Commands
 ```bash
 # Start local chain
-cd zeroklue-app/packages/foundry && yarn chain
+cd zeroklue-app && yarn chain
 
-# Deploy contracts
-yarn deploy
+# Deploy contracts  
+cd zeroklue-app && yarn deploy
 
 # Run tests
-forge test -vv
+cd zeroklue-app/packages/foundry && forge test -vv
 
 # Start Next.js
-cd ../nextjs && yarn dev
+cd zeroklue-app/packages/nextjs && yarn dev
 ```
 
 ---
