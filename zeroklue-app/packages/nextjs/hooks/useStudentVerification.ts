@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { verifyWithGoogle, GoogleVerificationResult } from "~~/lib/providers/google-oauth";
 import { generateEphemeralKey } from "~~/lib/ephemeral-key";
@@ -56,14 +56,14 @@ export function useStudentVerification() {
       // 2. Generate ephemeral key (binds proof to this session)
       const ephemeralKey = await generateEphemeralKey();
 
-      setState(s => ({ ...s, progress: 25 }));
+      setState(s => ({ ...s, progress: 30, status: "generating_proof" }));
 
       // 3. Google OAuth + ZK proof generation
       let result: GoogleVerificationResult;
       try {
         result = await verifyWithGoogle(ephemeralKey);
       } catch (err: any) {
-        if (err.message.includes("popup")) {
+        if (err.message?.includes("popup")) {
           throw new Error("Google sign-in was cancelled. Please try again.");
         }
         throw err;
@@ -71,7 +71,6 @@ export function useStudentVerification() {
 
       setState(s => ({ 
         ...s, 
-        status: "generating_proof", 
         domain: result.domain,
         progress: 70 
       }));
@@ -99,20 +98,23 @@ export function useStudentVerification() {
     }
   }, [isConnected, address, zeroKlueContract, writeContract]);
 
-  // Update state when transaction completes
-  if (isTxSuccess && state.status === "submitting_tx") {
-    setState(s => ({
-      ...s,
-      status: "success",
-      txHash: writeData || null,
-      progress: 100,
-    }));
-  }
+  useEffect(() => {
+    if (!isTxSuccess) return;
+    setState(s => (
+      s.status === "submitting_tx"
+        ? { ...s, status: "success", txHash: writeData || null, progress: 100 }
+        : s
+    ));
+  }, [isTxSuccess, writeData]);
 
-  // Update progress while tx is pending
-  if (isTxPending && state.status === "submitting_tx" && state.progress < 95) {
-    setState(s => ({ ...s, progress: 95 }));
-  }
+  useEffect(() => {
+    if (!isTxPending) return;
+    setState(s => (
+      s.status === "submitting_tx" && s.progress < 95
+        ? { ...s, progress: 95 }
+        : s
+    ));
+  }, [isTxPending]);
 
   const reset = useCallback(() => {
     setState(initialState);
