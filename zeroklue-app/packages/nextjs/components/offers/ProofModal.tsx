@@ -18,9 +18,10 @@ import { type ProofProgress, formatProofForContract, generateProof } from "~~/li
 
 interface ProofModalProps {
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function ProofModal({ onClose }: ProofModalProps) {
+export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
   const [progress, setProgress] = useState<ProofProgress>({
     stage: "loading",
     progress: 0,
@@ -74,7 +75,11 @@ export function ProofModal({ onClose }: ProofModalProps) {
 
       // Reload page after 2 seconds to show unlocked offers
       setTimeout(() => {
-        window.location.reload();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          window.location.reload();
+        }
       }, 2000);
     } catch (err) {
       console.error("Proof generation failed:", err);

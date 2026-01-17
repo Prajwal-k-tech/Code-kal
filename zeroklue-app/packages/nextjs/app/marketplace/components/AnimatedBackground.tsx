@@ -10,10 +10,10 @@ export const AnimatedBackground = () => {
     setMounted(true);
   }, []);
 
-  if (!mounted) return <div className="fixed inset-0 z-[-1] bg-[#0a0a2e]" />;
+  if (!mounted) return <div className="fixed inset-0 z-0 bg-[#0a0a2e]" />;
 
   return (
-    <div className="fixed inset-0 z-[-1] overflow-hidden bg-[#0a0a2e] contain-content">
+    <div className="fixed inset-0 z-0 overflow-hidden bg-[#0a0a2e] contain-content">
       {/* 
         Optimization Strategy:
         1. CSS Animations instead of JS (Framer Motion)

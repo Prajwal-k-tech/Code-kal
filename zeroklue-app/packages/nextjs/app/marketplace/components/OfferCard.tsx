@@ -1,3 +1,5 @@
+import { useState } from "react";
+import Link from "next/link";
 import { Offer } from "../data/offers";
 
 interface OfferCardProps {
@@ -51,11 +53,13 @@ export const OfferCard = ({ offer, isUnlocked, minimal = false }: OfferCardProps
           </h2>
           
           {/* Discount - Huge in descriptive mode */}
+
+          {/* Discount - Sanitized to handle both "50%" and "50% OFF" inputs */}
           <div className={`${minimal ? "mt-2" : "mt-4"}`}>
              <span className={`font-black text-white ${minimal ? "text-lg bg-white/20 px-3 py-1 rounded-full" : "text-5xl drop-shadow-lg"}`}>
-               {offer.discount}
+               {offer.discount.replace(/OFF/i, "").trim()}
              </span>
-             {!minimal && <span className="block text-lg font-medium text-white/80 mt-1">OFF</span>}
+             {!minimal && !offer.discount.includes("FREE") && <span className="block text-lg font-medium text-white/80 mt-1">OFF</span>}
           </div>
 
           {!minimal && <p className="text-base mt-4 font-medium text-gray-100 leading-snug">{offer.description}</p>}
@@ -65,10 +69,13 @@ export const OfferCard = ({ offer, isUnlocked, minimal = false }: OfferCardProps
         {!minimal && (
            <div className="mt-4">
              {isUnlocked ? (
-               <button className="btn btn-sm bg-white text-black border-none w-full hover:bg-gray-100 hover:scale-[1.02] transition-all shadow-lg font-bold flex items-center justify-center gap-2 group">
-                 Claim Reward 
-                 <span className="group-hover:translate-x-1 transition-transform">➜</span>
-               </button>
+               <div className="pt-4">
+                <Link href={`/merchant/${offer.id}`} className="w-full block">
+                 <button className="w-full btn bg-white hover:bg-indigo-50 text-indigo-900 border-none font-bold text-sm shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                   Claim Offer
+                 </button>
+                </Link>
+               </div>
              ) : (
                <div className="flex items-center gap-2 text-white/70 text-sm font-bold">
                  🔒 Locked
