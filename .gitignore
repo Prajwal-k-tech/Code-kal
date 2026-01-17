@@ -1,10 +1,25 @@
-packages/*/node_modules
+# Dependencies
+node_modules/
+packages/*/node_modules/
+**/node_modules/
+
+# Lock files (team should use consistent package manager)
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+.yarn/install-state.gz
+
+# Build outputs
 packages/*/.next
 packages/*/dist
 packages/*/build
 packages/*/out
 packages/*/.cache
 packages/*/coverage
+.next/
+dist/
+build/
+out/
 
 # Environment files
 .env

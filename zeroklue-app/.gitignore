@@ -1,5 +1,13 @@
 # dependencies
 node_modules
+**/node_modules
+
+# Lock files - ignore to prevent merge conflicts
+# Team should agree on one package manager
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+.yarn/install-state.gz
 
 # yarn
 .yarn/*

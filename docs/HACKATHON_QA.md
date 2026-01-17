@@ -43,8 +43,9 @@ That proof file gets sent to the blockchain. You can see it on the block explore
 
 1. You sign in with Google directly - we never see your password
 2. Your browser generates the proof - not our server
-3. The proof only contains a 'nullifier' - a one-way hash of your email
-4. A hash is like a fingerprint - you can't recreate the original from it
+3. The proof only contains your 'ephemeral public key' and domain name (like 'mit.edu')
+4. Your actual email (like 'alice@mit.edu') NEVER leaves your browser
+5. The blockchain only records: 'This wallet verified with an ephemeral key from some .edu domain'
 
 Even if we wanted to spy on you, the architecture prevents it. It's privacy by math, not privacy by policy."
 
