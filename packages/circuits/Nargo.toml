@@ -2,10 +2,11 @@
 name = "zeroklue_circuits"
 type = "bin"
 authors = ["ZeroKlue Team"]
-compiler_version = ">=0.38.0"
+compiler_version = ">=1.0.0-beta.0"
 
 [dependencies]
-# EdDSA signature verification
-eddsa = { git = "https://github.com/noir-lang/eddsa", tag = "v0.1.0" }
-# Poseidon hashing (comes with std but we may need extended versions)
-# See: https://github.com/noir-lang/poseidon
+# EdDSA signature verification (latest stable)
+eddsa = { git = "https://github.com/noir-lang/eddsa", tag = "v0.1.3" }
+
+# NOTE: Poseidon is now in std::hash::poseidon
+# See: https://noir-lang.org/docs/noir/standard_library/cryptographic_primitives/hashes

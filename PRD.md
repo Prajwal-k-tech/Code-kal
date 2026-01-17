@@ -21,6 +21,11 @@
 - ✅ Demo-ready in 24 hours
 - ✅ Judges can test the flow themselves
 
+**Realistic Expectations**:
+- Proof generation: 15-40 seconds (browser-dependent)
+- First load: May need to download ~8MB WASM bundle
+- Reference: Similar to [StealthNote](https://github.com/saleel/stealthnote) architecture
+
 ---
 
 ## What We're Building (24-Hour Scope)
