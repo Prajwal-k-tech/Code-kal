@@ -49,9 +49,9 @@ export const OfferStack = ({ offers, isUnlocked }: OfferStackProps) => {
           const col = index % colCount;
           const row = Math.floor(index / colCount);
           
-          // Grid offsets - moved DOWN significantly (y + 400)
+          // Grid offsets - minimal gap (just below header)
           const gridX = (col - 1) * 320; 
-          const gridY = row * 400 + 350; // Shift down 350px to clear the hero
+          const gridY = row * 400 + 50; // Shift down just 50px
           const gridRotate = 0;
 
           const isHovered = hoveredCardIndex === index;
@@ -97,7 +97,7 @@ export const OfferStack = ({ offers, isUnlocked }: OfferStackProps) => {
                  <OfferCard 
                     offer={offer} 
                     isUnlocked={isUnlocked} 
-                    minimal={false} 
+                    minimal={layoutState === "fanned"} 
                  />
                </div>
             </motion.div>

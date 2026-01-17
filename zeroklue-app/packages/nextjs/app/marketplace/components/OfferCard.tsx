@@ -38,16 +38,21 @@ export const OfferCard = ({ offer, isUnlocked, minimal = false }: OfferCardProps
         </div>
 
         {/* Content */}
-        <div className="flex flex-col gap-1">
-          <h2 className={`font-black tracking-tight ${minimal ? "text-2xl" : "text-3xl"}`}>
+        <div className="flex flex-col gap-1 mt-auto mb-4">
+          {/* Partner Name (Platform) */}
+          <h2 className={`font-black tracking-tight text-white ${minimal ? "text-2xl" : "text-4xl"}`}>
             {offer.partnerName}
           </h2>
           
-          <div className="bg-white/20 backdrop-blur-md self-start px-3 py-1 rounded-full mt-2">
-             <span className="font-bold">{offer.discount}</span>
+          {/* Discount - Huge in descriptive mode */}
+          <div className={`${minimal ? "mt-2" : "mt-4"}`}>
+             <span className={`font-black text-white ${minimal ? "text-lg bg-white/20 px-3 py-1 rounded-full" : "text-5xl drop-shadow-lg"}`}>
+               {offer.discount}
+             </span>
+             {!minimal && <span className="block text-lg font-medium text-white/80 mt-1">OFF</span>}
           </div>
 
-          {!minimal && <p className="text-sm mt-3 font-medium opacity-90 leading-tight">{offer.description}</p>}
+          {!minimal && <p className="text-base mt-4 font-medium text-gray-100 leading-snug">{offer.description}</p>}
         </div>
 
         {/* Action (only in full view) */}
