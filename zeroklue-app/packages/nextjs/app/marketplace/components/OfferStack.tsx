@@ -97,7 +97,7 @@ export const OfferStack = ({ offers, isUnlocked }: OfferStackProps) => {
                {/* Dynamic Card Size: w-64 (fan) vs w-80 (grid) */}
                <motion.div 
                  className="shadow-2xl transition-all duration-500"
-                 style={{ willChange: "transform, width, height" }} // Optimization hint
+                 style={{ willChange: "transform" }} // Removed width/height hint to save RAM
                  animate={{
                     width: layoutState === "fanned" ? 256 : 340, // w-64 vs w-[340px]
                     height: layoutState === "fanned" ? 320 : 450, // h-80 vs h-[450px]

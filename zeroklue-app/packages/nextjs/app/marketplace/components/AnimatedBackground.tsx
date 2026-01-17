@@ -14,78 +14,64 @@ export const AnimatedBackground = () => {
 
   return (
     <div className="fixed inset-0 z-[-1] overflow-hidden bg-[#0a0a2e] contain-content">
-      {/* 
+      /* 
         Optimization Strategy:
-        1. CSS Animations instead of JS (Framer Motion) for constant loops
-        2. will-change: transform to hint GPU layer creation
-        3. Reduced blur radius slightly to save fill-rate
-      */}
+        1. CSS Animations instead of JS (Framer Motion)
+        2. REMOVED expensive `filter: blur()` - relying on gradient for softness
+        3. Reduced layer count
+        4. Hardware acceleration cues
+      */
       <style jsx>{`
         @keyframes float1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(100px, 50px) scale(1.1); }
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(50px, 30px, 0) scale(1.1); }
         }
         @keyframes float2 {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(-50px, 80px); }
+          0%, 100% { transform: translate3d(0, 0, 0); }
+          50% { transform: translate3d(-30px, 50px, 0); }
         }
         @keyframes float3 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-30px, 40px) scale(1.05); }
-        }
-        @keyframes float4 {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(0, -40px); }
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(-20px, 20px, 0) scale(1.05); }
         }
         .blob {
           position: absolute;
           border-radius: 50%;
           will-change: transform;
+          /* Force hardware acceleration */
+          transform: translate3d(0,0,0);
         }
       `}</style>
 
       {/* Mesh Gradient 1: Deep Purple/Blue */}
       <div 
-        className="blob w-[70vw] h-[70vw] top-[-20%] left-[-10%] opacity-60 blend-multiply"
+        className="blob w-[60vw] h-[60vw] top-[-10%] left-[-10%] opacity-50"
         style={{
-            background: "radial-gradient(circle, #4c1d95 0%, transparent 70%)",
+            background: "radial-gradient(circle at center, #4c1d95 0%, transparent 60%)",
             animation: "float1 20s infinite ease-in-out",
-            filter: "blur(80px)", // Reduced from 100px
         }}
       />
 
       {/* Mesh Gradient 2: Electric Purple */}
       <div 
-        className="blob w-[60vw] h-[60vw] top-[20%] right-[-10%] opacity-50 blend-screen"
+        className="blob w-[50vw] h-[50vw] top-[30%] right-[-5%] opacity-40 mix-blend-screen"
         style={{
-            background: "radial-gradient(circle, #7c3aed 0%, transparent 70%)",
-            animation: "float2 15s infinite ease-in-out 2s",
-            filter: "blur(90px)", // Reduced from 120px
+            background: "radial-gradient(circle at center, #7c3aed 0%, transparent 60%)",
+            animation: "float2 15s infinite ease-in-out 1s",
         }}
       />
 
       {/* Mesh Gradient 3: Cyan/Teal */}
       <div 
-        className="blob w-[50vw] h-[50vw] top-[-10%] right-[10%] opacity-40 blend-screen"
+        className="blob w-[45vw] h-[45vw] top-[-5%] right-[5%] opacity-30 mix-blend-screen"
         style={{
-            background: "radial-gradient(circle, #06b6d4 0%, transparent 70%)",
-            animation: "float3 18s infinite ease-in-out 5s",
-            filter: "blur(80px)",
-        }}
-      />
-
-      {/* Mesh Gradient 4: Deep Blue */}
-      <div 
-        className="blob w-[80vw] h-[80vw] bottom-[-20%] left-[20%] opacity-70 blend-multiply"
-        style={{
-            background: "radial-gradient(circle, #1e3a8a 0%, transparent 70%)",
-            animation: "float4 25s infinite ease-in-out",
-            filter: "blur(90px)",
+            background: "radial-gradient(circle at center, #06b6d4 0%, transparent 60%)",
+            animation: "float3 18s infinite ease-in-out 3s",
         }}
       />
       
       {/* Noise Texture */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay pointer-events-none"></div>
+      <div className="absolute inset-0 opacity-[0.02] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay pointer-events-none"></div>
     </div>
   );
 };
