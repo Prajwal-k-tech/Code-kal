@@ -1,14 +1,14 @@
 "use client";
 
-import { useAccount, useReadContract } from "wagmi";
 import { useEffect, useState } from "react";
+import { useAccount, useReadContract } from "wagmi";
 
 /**
  * Hook to check if connected wallet has a ZeroKlue Student NFT
  * Also checks for stored credential in localStorage
- * 
+ *
  * @owner Frontend Dev 2
- * 
+ *
  * TODO:
  * - Add proper contract address
  * - Add proper ABI import

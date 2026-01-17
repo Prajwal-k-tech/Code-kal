@@ -14,4 +14,3 @@
 
 // Re-export from actual location for backwards compatibility
 export * from '../circuits/jwt';
-

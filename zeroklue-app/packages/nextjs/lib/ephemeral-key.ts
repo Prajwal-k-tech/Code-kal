@@ -1,8 +1,8 @@
-import { Barretenberg, Fr } from "@aztec/bb.js";
-import * as ed25519 from '@noble/ed25519';
-import { sha512 } from '@noble/hashes/sha512';
 import { EphemeralKey, LocalStorageKeys, Message, SignedMessage } from "./types";
-import { bytesToBigInt, bigIntToBytes } from "./utils";
+import { bigIntToBytes, bytesToBigInt } from "./utils";
+import { Barretenberg, Fr } from "@aztec/bb.js";
+import * as ed25519 from "@noble/ed25519";
+import { sha512 } from "@noble/hashes/sha512";
 
 ed25519.etc.sha512Sync = (...m) => sha512(ed25519.etc.concatBytes(...m));
 
@@ -40,13 +40,16 @@ export async function generateEphemeralKey(): Promise<EphemeralKey> {
 }
 
 function saveEphemeralKey(ephemeralKey: EphemeralKey) {
-  localStorage.setItem(LocalStorageKeys.EphemeralKey, JSON.stringify({
-    privateKey: ephemeralKey.privateKey.toString(),
-    publicKey: ephemeralKey.publicKey.toString(),
-    salt: ephemeralKey.salt.toString(),
-    expiry: ephemeralKey.expiry,
-    ephemeralPubkeyHash: ephemeralKey.ephemeralPubkeyHash.toString(),
-  }));
+  localStorage.setItem(
+    LocalStorageKeys.EphemeralKey,
+    JSON.stringify({
+      privateKey: ephemeralKey.privateKey.toString(),
+      publicKey: ephemeralKey.publicKey.toString(),
+      salt: ephemeralKey.salt.toString(),
+      expiry: ephemeralKey.expiry,
+      ephemeralPubkeyHash: ephemeralKey.ephemeralPubkeyHash.toString(),
+    }),
+  );
 }
 
 function loadEphemeralKey() {
@@ -110,11 +113,7 @@ export async function verifyMessageSignature(message: SignedMessage) {
   const pubkey = bigIntToBytes(message.ephemeralPubkey, 32);
   const messageHash = await hashMessage(message);
 
-  const isValid = await ed25519.verify(
-    bigIntToBytes(message.signature, 64),
-    messageHash,
-    pubkey
-  );
+  const isValid = await ed25519.verify(bigIntToBytes(message.signature, 64), messageHash, pubkey);
 
   if (!isValid) {
     console.error("Signature verification failed for the message");
@@ -125,7 +124,6 @@ export async function verifyMessageSignature(message: SignedMessage) {
 
 async function hashMessage(message: Message) {
   const messageStr = `${message.anonGroupId}_${message.text}_${message.timestamp.getTime()}`;
-  const messageHash = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(messageStr));
+  const messageHash = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(messageStr));
   return new Uint8Array(messageHash);
 }
-

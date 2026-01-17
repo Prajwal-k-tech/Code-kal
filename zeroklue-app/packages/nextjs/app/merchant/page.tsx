@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useStudentNFT } from "~~/hooks/scaffold-eth/useStudentNFT";
 import Link from "next/link";
+import { useStudentNFT } from "~~/hooks/scaffold-eth/useStudentNFT";
 
 /**
  * Merchant Demo Page
  * Simulates TechMart electronics store with student discount
- * 
+ *
  * @owner Frontend Dev 2
  */
 export default function MerchantPage() {
@@ -23,15 +23,9 @@ export default function MerchantPage() {
       {/* Header */}
       <header className="bg-white/10 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="text-white font-bold text-2xl">
-            💻 TechMart
-          </div>
+          <div className="text-white font-bold text-2xl">💻 TechMart</div>
           <div className="flex items-center gap-4">
-            {hasNFT && (
-              <span className="badge badge-success gap-1">
-                ✓ Student Verified
-              </span>
-            )}
+            {hasNFT && <span className="badge badge-success gap-1">✓ Student Verified</span>}
             <Link href="/marketplace" className="btn btn-ghost btn-sm text-white">
               ← Back to ZeroKlue
             </Link>
@@ -45,19 +39,15 @@ export default function MerchantPage() {
           {/* Product Image */}
           <div className="bg-white/5 rounded-3xl p-12 backdrop-blur-sm">
             <div className="text-center text-9xl">💻</div>
-            <p className="text-white/60 text-center mt-4">
-              TechMart Pro Laptop 2026
-            </p>
+            <p className="text-white/60 text-center mt-4">TechMart Pro Laptop 2026</p>
           </div>
 
           {/* Product Details */}
           <div className="text-white space-y-6">
-            <h1 className="text-4xl font-bold">
-              TechMart Pro Laptop
-            </h1>
+            <h1 className="text-4xl font-bold">TechMart Pro Laptop</h1>
             <p className="text-white/60 text-lg">
-              The most powerful laptop for students. M3 Max chip, 
-              32GB RAM, 1TB SSD. Perfect for coding, design, and everything in between.
+              The most powerful laptop for students. M3 Max chip, 32GB RAM, 1TB SSD. Perfect for coding, design, and
+              everything in between.
             </p>
 
             {/* Price Section */}
@@ -70,14 +60,8 @@ export default function MerchantPage() {
               ) : (
                 <>
                   <div className="flex items-baseline gap-4">
-                    <span className="text-4xl font-bold">
-                      ${finalPrice}
-                    </span>
-                    {hasNFT && (
-                      <span className="text-white/60 line-through text-xl">
-                        ${originalPrice}
-                      </span>
-                    )}
+                    <span className="text-4xl font-bold">${finalPrice}</span>
+                    {hasNFT && <span className="text-white/60 line-through text-xl">${originalPrice}</span>}
                   </div>
 
                   {hasNFT ? (
@@ -87,19 +71,13 @@ export default function MerchantPage() {
                     </div>
                   ) : (
                     <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4">
-                      <p className="text-yellow-200 font-medium">
-                        🎓 Students save ${studentDiscount}!
-                      </p>
+                      <p className="text-yellow-200 font-medium">🎓 Students save ${studentDiscount}!</p>
                       <p className="text-yellow-200/60 text-sm mt-1">
-                        {isConnected 
+                        {isConnected
                           ? "Verify with ZeroKlue to unlock student pricing"
-                          : "Connect wallet and verify with ZeroKlue to unlock"
-                        }
+                          : "Connect wallet and verify with ZeroKlue to unlock"}
                       </p>
-                      <Link 
-                        href="/verify" 
-                        className="btn btn-warning btn-sm mt-3"
-                      >
+                      <Link href="/verify" className="btn btn-warning btn-sm mt-3">
                         Verify Student Status
                       </Link>
                     </div>
@@ -111,26 +89,16 @@ export default function MerchantPage() {
             {/* Quantity & Add to Cart */}
             <div className="flex items-center gap-4">
               <div className="join">
-                <button 
-                  className="btn join-item"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                >
+                <button className="btn join-item" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
                   -
                 </button>
-                <span className="btn join-item pointer-events-none">
-                  {quantity}
-                </span>
-                <button 
-                  className="btn join-item"
-                  onClick={() => setQuantity(quantity + 1)}
-                >
+                <span className="btn join-item pointer-events-none">{quantity}</span>
+                <button className="btn join-item" onClick={() => setQuantity(quantity + 1)}>
                   +
                 </button>
               </div>
-              
-              <button className="btn btn-primary flex-1">
-                Add to Cart - ${finalPrice * quantity}
-              </button>
+
+              <button className="btn btn-primary flex-1">Add to Cart - ${finalPrice * quantity}</button>
             </div>
 
             {/* Features */}

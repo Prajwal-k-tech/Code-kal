@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { generateProof, formatProofForContract, type ProofProgress } from "~~/lib/noir";
+import { useEffect, useState } from "react";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { type ProofProgress, formatProofForContract, generateProof } from "~~/lib/noir";
 
 /**
  * Proof generation modal
  * Shows progress of ZK proof generation and NFT minting
- * 
+ *
  * @owner Frontend Dev 2
- * 
+ *
  * TODO:
  * - Add better error handling
  * - Add retry functionality
@@ -35,7 +35,7 @@ export function ProofModal({ onClose }: ProofModalProps) {
 
   useEffect(() => {
     startProofGeneration();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startProofGeneration = async () => {
     try {
@@ -65,7 +65,7 @@ export function ProofModal({ onClose }: ProofModalProps) {
         args: [proof, publicInputs],
       });
 
-      setTxHash(hash);
+      if (hash) setTxHash(hash);
       setProgress({
         stage: "done",
         progress: 100,
@@ -76,7 +76,6 @@ export function ProofModal({ onClose }: ProofModalProps) {
       setTimeout(() => {
         window.location.reload();
       }, 2000);
-
     } catch (err) {
       console.error("Proof generation failed:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -87,7 +86,7 @@ export function ProofModal({ onClose }: ProofModalProps) {
     <div className="modal modal-open">
       <div className="modal-box">
         <h3 className="font-bold text-lg">Generating Your Proof</h3>
-        
+
         <div className="py-6">
           {error ? (
             <div className="alert alert-error">
@@ -97,7 +96,7 @@ export function ProofModal({ onClose }: ProofModalProps) {
             <>
               {/* Progress bar */}
               <div className="w-full bg-base-300 rounded-full h-4 mb-4">
-                <div 
+                <div
                   className="bg-primary h-4 rounded-full transition-all duration-500"
                   style={{ width: `${progress.progress}%` }}
                 />
@@ -119,20 +118,16 @@ export function ProofModal({ onClose }: ProofModalProps) {
                 </span>
               </div>
 
-              <p className="text-center text-base-content/60">
-                {progress.message}
-              </p>
+              <p className="text-center text-base-content/60">{progress.message}</p>
 
               {progress.stage !== "done" && (
-                <p className="text-center text-sm text-base-content/40 mt-2">
-                  This takes about 15 seconds...
-                </p>
+                <p className="text-center text-sm text-base-content/40 mt-2">This takes about 15 seconds...</p>
               )}
 
               {txHash && (
                 <div className="mt-4 text-center">
                   <p className="text-success font-medium">🎉 Success!</p>
-                  <a 
+                  <a
                     href={`https://basescan.org/tx/${txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"

@@ -28,11 +28,7 @@ export function bigIntToBytes(bigInt: bigint, length: number): Uint8Array {
 /**
  * Split a BigInt into limbs for circuit input
  */
-export function splitBigIntToLimbs(
-  bigInt: bigint,
-  byteLength: number,
-  numLimbs: number
-): bigint[] {
+export function splitBigIntToLimbs(bigInt: bigint, byteLength: number, numLimbs: number): bigint[] {
   const chunks: bigint[] = [];
   const mask = (1n << BigInt(byteLength)) - 1n;
   for (let i = 0; i < numLimbs; i++) {
@@ -54,14 +50,14 @@ export async function pubkeyModulusFromJWK(jwk: JsonWebKey): Promise<bigint> {
       hash: "SHA-256",
     },
     true,
-    ["verify"]
+    ["verify"],
   );
 
   const publicKeyJWK = await crypto.subtle.exportKey("jwk", publicKey);
-  
+
   // Convert base64url to hex
   const modulusBase64 = publicKeyJWK.n as string;
-  const modulusBytes = Uint8Array.from(atob(modulusBase64.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+  const modulusBytes = Uint8Array.from(atob(modulusBase64.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
   const modulusBigInt = bytesToBigInt(modulusBytes);
 
   return modulusBigInt;
@@ -80,7 +76,7 @@ export function getLogoUrl(domain: string): string {
 export function formatDomain(domain: string): string {
   return domain
     .split(".")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join(".");
 }
 
@@ -90,14 +86,14 @@ export function formatDomain(domain: string): string {
  */
 export function isUniversityDomain(domain: string): boolean {
   const eduPatterns = [
-    /\.edu$/,           // US universities
+    /\.edu$/, // US universities
     /\.edu\.[a-z]{2}$/, // Country-specific .edu (e.g., .edu.au)
-    /\.ac\.[a-z]{2}$/,  // Academic domains (e.g., .ac.uk, .ac.in)
-    /\.uni-.*$/,        // German universities
-    /\.university$/,    // Generic
+    /\.ac\.[a-z]{2}$/, // Academic domains (e.g., .ac.uk, .ac.in)
+    /\.uni-.*$/, // German universities
+    /\.university$/, // Generic
   ];
-  
-  return eduPatterns.some((pattern) => pattern.test(domain.toLowerCase()));
+
+  return eduPatterns.some(pattern => pattern.test(domain.toLowerCase()));
 }
 
 /**
@@ -123,7 +119,10 @@ export function hexToBytes(hex: string): Uint8Array {
  * Convert bytes to hex string
  */
 export function bytesToHex(bytes: Uint8Array): string {
-  return "0x" + Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  return (
+    "0x" +
+    Array.from(bytes)
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("")
+  );
 }

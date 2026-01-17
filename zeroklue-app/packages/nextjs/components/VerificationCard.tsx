@@ -14,16 +14,7 @@ interface Step {
 }
 
 export function VerificationCard() {
-  const {
-    verify,
-    reset,
-    status,
-    error,
-    domain,
-    txHash,
-    progress,
-    isLoading,
-  } = useStudentVerification();
+  const { verify, reset, status, error, domain, txHash, progress, isLoading } = useStudentVerification();
 
   const steps: Step[] = useMemo(
     () => [
@@ -56,7 +47,7 @@ export function VerificationCard() {
         active: status === "submitting_tx",
       },
     ],
-    [status]
+    [status],
   );
 
   return (
@@ -78,17 +69,11 @@ export function VerificationCard() {
             </div>
             <div className="flex items-center gap-2">
               {txHash && (
-                <Link
-                  href={`/blockexplorer/tx/${txHash}`}
-                  className="link link-primary text-sm"
-                  prefetch={false}
-                >
+                <Link href={`/blockexplorer/tx/${txHash}`} className="link link-primary text-sm" prefetch={false}>
                   View Tx
                 </Link>
               )}
-              {domain && (
-                <span className="badge badge-outline">{domain}</span>
-              )}
+              {domain && <span className="badge badge-outline">{domain}</span>}
             </div>
           </div>
           <progress className="progress progress-primary w-full" value={progress} max={100} />
@@ -99,12 +84,22 @@ export function VerificationCard() {
             <div
               key={step.id}
               className={`p-4 rounded-lg border ${
-                step.done ? "border-success/50 bg-success/10" : step.active ? "border-primary/40 bg-primary/5" : "border-base-300"
+                step.done
+                  ? "border-success/50 bg-success/10"
+                  : step.active
+                    ? "border-primary/40 bg-primary/5"
+                    : "border-base-300"
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="font-semibold">{step.label}</div>
-                {step.done ? <span className="text-success">●</span> : step.active ? <span className="text-primary">●</span> : <span>○</span>}
+                {step.done ? (
+                  <span className="text-success">●</span>
+                ) : step.active ? (
+                  <span className="text-primary">●</span>
+                ) : (
+                  <span>○</span>
+                )}
               </div>
               <p className="text-sm opacity-70 mt-1">{step.description}</p>
             </div>
@@ -114,7 +109,9 @@ export function VerificationCard() {
         {error && (
           <div className="alert alert-error">
             <span>{error}</span>
-            <button className="btn btn-sm" onClick={reset}>Dismiss</button>
+            <button className="btn btn-sm" onClick={reset}>
+              Dismiss
+            </button>
           </div>
         )}
 

@@ -11,7 +11,7 @@ export default function OAuthCallback() {
     // Parse the URL fragment for the id_token
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
-    
+
     const idToken = params.get("id_token");
     const state = params.get("state");
     const error = params.get("error");
@@ -26,9 +26,9 @@ export default function OAuthCallback() {
           state,
           error: error || errorDescription,
         },
-        window.location.origin
+        window.location.origin,
       );
-      
+
       // Close the popup after a short delay
       setTimeout(() => window.close(), 100);
     } else {

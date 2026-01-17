@@ -7,15 +7,7 @@
       "alpha_two_code": "IN"
     }
   ],
-  "patterns": [
-    ".edu",
-    ".ac.in",
-    ".ac.uk",
-    ".edu.au",
-    ".edu.sg",
-    ".ac.jp",
-    ".edu.cn"
-  ],
+  "patterns": [".edu", ".ac.in", ".ac.uk", ".edu.au", ".edu.sg", ".ac.jp", ".edu.cn"],
   "api": {
     "endpoint": "http://universities.hipolabs.com/search",
     "fallback": true,

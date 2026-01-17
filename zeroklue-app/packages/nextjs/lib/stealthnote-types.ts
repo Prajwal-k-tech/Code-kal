@@ -58,7 +58,7 @@ export interface AnonGroupProvider {
     anonGroupId: string,
     ephemeralPubkey: bigint,
     ephemeralPubkeyExpiry: Date,
-    proofArgs: object
+    proofArgs: object,
   ): Promise<boolean>;
 
   /**

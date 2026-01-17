@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useStudentNFT } from "~~/hooks/scaffold-eth/useStudentNFT";
 import { ProofModal } from "./ProofModal";
+import { useStudentNFT } from "~~/hooks/scaffold-eth/useStudentNFT";
 
 /**
  * Unlock button for marketplace
  * Shows based on NFT/credential status
- * 
+ *
  * @owner Frontend Dev 2
  */
 export function UnlockButton() {
@@ -16,11 +16,7 @@ export function UnlockButton() {
   const [showProofModal, setShowProofModal] = useState(false);
 
   if (isLoading) {
-    return (
-      <button className="btn btn-primary btn-lg loading">
-        Checking status...
-      </button>
-    );
+    return <button className="btn btn-primary btn-lg loading">Checking status...</button>;
   }
 
   // Already has NFT - nothing to unlock
@@ -32,16 +28,11 @@ export function UnlockButton() {
   if (hasCredential) {
     return (
       <>
-        <button 
-          className="btn btn-primary btn-lg gap-2 shadow-lg"
-          onClick={() => setShowProofModal(true)}
-        >
+        <button className="btn btn-primary btn-lg gap-2 shadow-lg" onClick={() => setShowProofModal(true)}>
           <span>🔓</span> Unlock All Offers
         </button>
-        
-        {showProofModal && (
-          <ProofModal onClose={() => setShowProofModal(false)} />
-        )}
+
+        {showProofModal && <ProofModal onClose={() => setShowProofModal(false)} />}
       </>
     );
   }

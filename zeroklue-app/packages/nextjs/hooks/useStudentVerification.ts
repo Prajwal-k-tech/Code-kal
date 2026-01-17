@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { verifyWithGoogle, type GoogleVerificationResult } from "~~/lib/providers/google-oauth";
-import { generateEphemeralKey } from "~~/lib/ephemeral-key";
+import { useCallback, useEffect, useState } from "react";
+import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
+import { generateEphemeralKey } from "~~/lib/ephemeral-key";
+import { GoogleVerificationResult, verifyWithGoogle } from "~~/lib/providers/google-oauth";
 import { VerificationStatus } from "~~/lib/types";
 
 export interface StudentVerificationState {
@@ -31,7 +31,7 @@ export function useStudentVerification() {
   const [state, setState] = useState<StudentVerificationState>(initialState);
   const { address, isConnected } = useAccount();
   const { data: zeroKlueContract } = useDeployedContractInfo("ZeroKlue");
-  
+
   const { writeContract, data: writeData } = useWriteContract();
   const { isLoading: isTxPending, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
     hash: writeData,
@@ -46,7 +46,7 @@ export function useStudentVerification() {
       if (!isConnected || !address) {
         throw new Error("Please connect your wallet first");
       }
-      
+
       if (!zeroKlueContract) {
         throw new Error("ZeroKlue contract not found. Please check your network.");
       }
@@ -69,22 +69,21 @@ export function useStudentVerification() {
         throw err;
       }
 
-      setState(s => ({ 
-        ...s, 
+      setState(s => ({
+        ...s,
         domain: result.domain,
-        progress: 70 
+        progress: 70,
       }));
 
       // 4. Submit to smart contract
       setState(s => ({ ...s, status: "submitting_tx", progress: 85 }));
-      
+
       writeContract({
         address: zeroKlueContract.address,
         abi: zeroKlueContract.abi,
         functionName: "verifyAndMint",
         args: [result.contractProof.proofHex, result.contractProof.publicInputs],
       });
-
     } catch (err: any) {
       console.error("[ZeroKlue] Verification failed:", err);
       setState(s => ({
@@ -98,20 +97,14 @@ export function useStudentVerification() {
 
   useEffect(() => {
     if (!isTxSuccess) return;
-    setState(s => (
-      s.status === "submitting_tx"
-        ? { ...s, status: "success", txHash: writeData || null, progress: 100 }
-        : s
-    ));
+    setState(s =>
+      s.status === "submitting_tx" ? { ...s, status: "success", txHash: writeData || null, progress: 100 } : s,
+    );
   }, [isTxSuccess, writeData]);
 
   useEffect(() => {
     if (!isTxPending) return;
-    setState(s => (
-      s.status === "submitting_tx" && s.progress < 95
-        ? { ...s, progress: 95 }
-        : s
-    ));
+    setState(s => (s.status === "submitting_tx" && s.progress < 95 ? { ...s, progress: 95 } : s));
   }, [isTxPending]);
 
   const reset = useCallback(() => {

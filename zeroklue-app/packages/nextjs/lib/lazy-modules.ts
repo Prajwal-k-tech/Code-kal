@@ -2,8 +2,8 @@
  * Lazy load heavy ZK modules to avoid blocking initial page load
  * Adapted from StealthNote
  */
+import { type BarretenbergVerifier, type UltraHonkBackend } from "@aztec/bb.js";
 import { type Noir } from "@noir-lang/noir_js";
-import { type UltraHonkBackend, type BarretenbergVerifier } from "@aztec/bb.js";
 
 let proverPromise: Promise<{
   Noir: typeof Noir;

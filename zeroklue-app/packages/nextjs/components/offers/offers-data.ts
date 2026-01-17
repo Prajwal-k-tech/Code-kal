@@ -1,7 +1,7 @@
 /**
  * Offer data for marketplace
  * Easy to add more offers here
- * 
+ *
  * @owner Frontend Dev 2
  */
 

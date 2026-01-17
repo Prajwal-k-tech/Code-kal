@@ -1,8 +1,8 @@
-import { generateInputs } from "noir-jwt";
-import { InputMap, type CompiledCircuit } from "@noir-lang/noir_js";
 import { initProver, initVerifier } from "../lazy-modules";
 import { EphemeralKey } from "../types";
-import { splitBigIntToLimbs, bytesToHex } from "../utils";
+import { bytesToHex } from "../utils";
+import { type CompiledCircuit, InputMap } from "@noir-lang/noir_js";
+import { generateInputs } from "noir-jwt";
 
 const MAX_DOMAIN_LENGTH = 64;
 
@@ -23,7 +23,7 @@ export interface ContractProof {
 
 export const JWTCircuitHelper = {
   version: "0.1.0", // ZeroKlue version
-  
+
   /**
    * Generate a ZK proof for student/professional verification
    * Returns proof data ready for the ZeroKlue smart contract
@@ -40,9 +40,7 @@ export const JWTCircuitHelper = {
     domain: string;
   }): Promise<ContractProof> => {
     if (!idToken || !jwtPubkey) {
-      throw new Error(
-        "[JWT Circuit] Proof generation failed: idToken and jwtPubkey are required"
-      );
+      throw new Error("[JWT Circuit] Proof generation failed: idToken and jwtPubkey are required");
     }
 
     const jwtInputs = await generateInputs({
@@ -75,11 +73,11 @@ export const JWTCircuitHelper = {
     console.log("[ZeroKlue] JWT circuit inputs prepared");
 
     const { Noir, UltraHonkBackend } = await initProver();
-    
+
     // Load circuit from public folder
     const circuitResponse = await fetch(CIRCUIT_PATH);
     const circuitArtifact = await circuitResponse.json();
-    
+
     const backend = new UltraHonkBackend(circuitArtifact.bytecode, { threads: 8 });
     const noir = new Noir(circuitArtifact as CompiledCircuit);
 
@@ -91,21 +89,21 @@ export const JWTCircuitHelper = {
     const provingTime = performance.now() - startTime;
 
     console.log(`[ZeroKlue] Proof generated in ${(provingTime / 1000).toFixed(1)}s`);
-    
+
     // Format for smart contract
     // proof is Uint8Array, convert to hex
     const proofHex = bytesToHex(proof) as `0x${string}`;
-    
+
     // publicInputs from backend are already in the right format
     // They should be 85 bytes32 values
     const formattedInputs = publicInputs.map(input => {
       // Ensure each input is a proper 32-byte hex string
-      if (typeof input === 'string') {
-        return input.startsWith('0x') ? input as `0x${string}` : `0x${input}` as `0x${string}`;
+      if (typeof input === "string") {
+        return input.startsWith("0x") ? (input as `0x${string}`) : (`0x${input}` as `0x${string}`);
       }
-      return `0x${input.toString(16).padStart(64, '0')}` as `0x${string}`;
+      return `0x${input.toString(16).padStart(64, "0")}` as `0x${string}`;
     });
-    
+
     // The nullifier is the last public input (index 84)
     const nullifier = formattedInputs[84] || formattedInputs[formattedInputs.length - 1];
 
@@ -120,10 +118,7 @@ export const JWTCircuitHelper = {
    * Verify a proof client-side (for testing)
    * In production, verification happens on-chain via ZeroKlue.sol
    */
-  verifyProofClientSide: async (
-    proof: Uint8Array,
-    publicInputs: string[]
-  ): Promise<boolean> => {
+  verifyProofClientSide: async (proof: Uint8Array, publicInputs: string[]): Promise<boolean> => {
     const { BarretenbergVerifier } = await initVerifier();
 
     // Load vkey from public folder
@@ -138,12 +133,7 @@ export const JWTCircuitHelper = {
     const verifier = new BarretenbergVerifier({
       crsPath: process.env.TEMP_DIR,
     });
-    
-    const result = await verifier.verifyUltraHonkProof(
-      proofData,
-      Uint8Array.from(vkey)
-    );
 
-    return result;
+    return await verifier.verifyUltraHonkProof(proofData, Uint8Array.from(vkey));
   },
 };

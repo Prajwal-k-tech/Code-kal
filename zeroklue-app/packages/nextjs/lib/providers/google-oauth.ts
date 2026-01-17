@@ -1,4 +1,4 @@
-import { JWTCircuitHelper, ContractProof } from "../circuits/jwt";
+import { ContractProof, JWTCircuitHelper } from "../circuits/jwt";
 import { EphemeralKey } from "../types";
 import { pubkeyModulusFromJWK } from "../utils";
 
@@ -23,9 +23,7 @@ export interface GoogleVerificationResult {
  * @param ephemeralKey - Generated ephemeral key to bind proof to wallet
  * @returns Proof data ready for the ZeroKlue smart contract
  */
-export async function verifyWithGoogle(
-  ephemeralKey: EphemeralKey
-): Promise<GoogleVerificationResult> {
+export async function verifyWithGoogle(ephemeralKey: EphemeralKey): Promise<GoogleVerificationResult> {
   // Load Google OAuth script
   await loadGoogleOAuthScript();
 
@@ -43,7 +41,7 @@ export async function verifyWithGoogle(
   if (!domain) {
     throw new Error(
       "Your Google account must be part of an organization (Google Workspace). " +
-      "Personal Gmail accounts are not supported."
+        "Personal Gmail accounts are not supported.",
     );
   }
 
@@ -103,7 +101,7 @@ declare global {
 }
 
 async function loadGoogleOAuthScript(): Promise<void> {
-  return new Promise<void>((resolve) => {
+  return new Promise<void>(resolve => {
     if (typeof window.google !== "undefined" && window.google.accounts) {
       resolve();
       return;
@@ -131,13 +129,7 @@ async function signInWithGoogle({ nonce }: { nonce: string }): Promise<string> {
   }
 }
 
-async function signInWithGoogleOneTap({
-  nonce,
-  clientId,
-}: {
-  nonce: string;
-  clientId: string;
-}): Promise<string> {
+async function signInWithGoogleOneTap({ nonce, clientId }: { nonce: string; clientId: string }): Promise<string> {
   return new Promise((resolve, reject) => {
     window.google?.accounts.id.initialize({
       client_id: clientId,
@@ -158,15 +150,9 @@ async function signInWithGoogleOneTap({
   });
 }
 
-async function signInWithGooglePopup({
-  nonce,
-  clientId,
-}: {
-  nonce: string;
-  clientId: string;
-}): Promise<string> {
+async function signInWithGooglePopup({ nonce, clientId }: { nonce: string; clientId: string }): Promise<string> {
   const redirectUri = `${window.location.origin}/oauth-callback`;
-  
+
   // Generate state for CSRF protection
   const state = crypto.randomUUID();
   localStorage.setItem("zeroklue_oauth_state", state);
@@ -182,7 +168,7 @@ async function signInWithGooglePopup({
   });
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
-  
+
   // Open popup
   const popup = window.open(authUrl, "google-oauth", "width=500,height=600");
   if (!popup) {
@@ -193,10 +179,10 @@ async function signInWithGooglePopup({
   return new Promise((resolve, reject) => {
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-      
+
       if (event.data.type === "OAUTH_CALLBACK") {
         window.removeEventListener("message", handleMessage);
-        
+
         if (event.data.error) {
           reject(new Error(event.data.error));
         } else if (event.data.idToken) {

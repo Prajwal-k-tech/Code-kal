@@ -1,9 +1,4 @@
-import {
-  uniqueNamesGenerator,
-  Config,
-  adjectives,
-  animals,
-} from "unique-names-generator";
+import { Config, adjectives, animals, uniqueNamesGenerator } from "unique-names-generator";
 
 export function getLogoUrl(domain: string) {
   return `https://img.logo.dev/${domain}?token=pk_SqdEexoxR3akcyJz7PneXg`;
@@ -44,13 +39,11 @@ export async function pubkeyModulusFromJWK(jwk: JsonWebKey) {
       hash: "SHA-256",
     },
     true,
-    ["verify"]
+    ["verify"],
   );
 
   const publicKeyJWK = await crypto.subtle.exportKey("jwk", publicKey);
-  const modulusBigInt = BigInt(
-    "0x" + Buffer.from(publicKeyJWK.n as string, "base64").toString("hex")
-  );
+  const modulusBigInt = BigInt("0x" + Buffer.from(publicKeyJWK.n as string, "base64").toString("hex"));
 
   return modulusBigInt;
 }
@@ -66,16 +59,12 @@ export function bytesToBigInt(bytes: Uint8Array) {
 export function bigIntToBytes(bigInt: bigint, length: number) {
   const bytes = new Uint8Array(length);
   for (let i = 0; i < length; i++) {
-    bytes[length - 1 - i] = Number(bigInt >> BigInt(i * 8) & BigInt(0xff));
+    bytes[length - 1 - i] = Number((bigInt >> BigInt(i * 8)) & BigInt(0xff));
   }
   return bytes;
 }
 
-export function splitBigIntToLimbs(
-  bigInt: bigint,
-  byteLength: number,
-  numLimbs: number
-): bigint[] {
+export function splitBigIntToLimbs(bigInt: bigint, byteLength: number, numLimbs: number): bigint[] {
   const chunks: bigint[] = [];
   const mask = (1n << BigInt(byteLength)) - 1n;
   for (let i = 0; i < numLimbs; i++) {

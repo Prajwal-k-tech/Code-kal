@@ -1,49 +1,89 @@
-import { Suspense } from "react";
-import { OfferGrid } from "~~/components/offers/OfferGrid";
-import { UnlockButton } from "~~/components/offers/UnlockButton";
+"use client";
+
+import { useState } from "react";
+import { OfferStack } from "./components/OfferStack";
+import { offers } from "./data/offers";
+import { motion } from "framer-motion";
 
 /**
- * Marketplace Page
+ * Marketplace Page (Redesigned)
  * 
- * Shows offer cards in locked/unlocked state based on NFT ownership
- * 
- * @owner Frontend Dev 2
+ * "Pallet Ross" inspired aesthetic.
  */
 export default function MarketplacePage() {
+  const [isUnlocked, setIsUnlocked] = useState(false);
+
   return (
-    <div className="min-h-screen bg-base-200">
-      <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold">Student Offers</h1>
-          <p className="text-base-content/60 mt-2">
-            Exclusive discounts for verified students
+    <div className="min-h-screen bg-[#F9FAFB] text-base-content overflow-x-hidden selection:bg-black selection:text-white">
+      {/* Navbar Placeholder (if needed, else standard nav) */}
+      
+      <main className="container mx-auto px-4 pt-10 pb-20">
+        
+        {/* Hero Section */}
+        <motion.header 
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.8 }}
+           className="text-center mb-20 relative max-w-4xl mx-auto"
+        >
+          {/* Floating Badges (Decorations) */}
+          <motion.div 
+             animate={{ y: [0, -10, 0] }}
+             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+             className="absolute -top-10 -left-10 md:left-0 hidden md:flex items-center gap-2 bg-[#4F46E5] text-white px-4 py-2 rounded-full shadow-lg rotate-[-6deg] z-10"
+          >
+            <span className="font-bold">@student</span>
+          </motion.div>
+
+          <motion.div 
+             animate={{ y: [0, 15, 0] }}
+             transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
+             className="absolute top-20 -right-10 md:right-0 hidden md:flex items-center gap-2 bg-[#10B981] text-white px-4 py-2 rounded-full shadow-lg rotate-[4deg] z-10"
+          >
+            <span className="font-bold">@verified</span>
+          </motion.div>
+
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[#111827] leading-[0.9]">
+            A place to claim your <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+              student perks.
+            </span>
+          </h1>
+          
+          <p className="text-xl text-gray-500 mt-6 max-w-2xl mx-auto">
+            Zero-knowledge proof verification. Keep your identity private, 
+            unlock <span className={isUnlocked ? "text-green-600 font-bold" : "font-bold"}>{isUnlocked ? "verified" : "exclusive"}</span> benefits.
           </p>
-        </header>
 
-        <Suspense fallback={<OffersSkeleton />}>
-          <OfferGrid />
-        </Suspense>
-
-        <div className="fixed bottom-8 left-0 right-0 flex justify-center">
-          <UnlockButton />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function OffersSkeleton() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {[1, 2, 3, 4].map(i => (
-        <div key={i} className="card bg-base-100 shadow-xl animate-pulse">
-          <div className="h-32 bg-base-300" />
-          <div className="card-body">
-            <div className="h-6 bg-base-300 rounded w-2/3" />
-            <div className="h-4 bg-base-300 rounded w-1/2" />
+          <div className="mt-8 flex justify-center gap-4">
+             {!isUnlocked && (
+               <button 
+                  onClick={() => setIsUnlocked(true)}
+                  className="btn btn-lg bg-[#111827] text-white hover:bg-black rounded-full px-8 border-none shadow-xl hover:scale-105 transition-transform"
+               >
+                 Unmask Discounts
+               </button>
+             )}
+             {isUnlocked && (
+               <div className="btn btn-lg bg-green-100 text-green-800 rounded-full px-8 pointer-events-none border-green-200">
+                 ✓ Identity Verified
+               </div>
+             )}
           </div>
-        </div>
-      ))}
+        </motion.header>
+
+        {/* Stack/Fan Component */}
+        <section className="relative">
+           <OfferStack offers={offers} isUnlocked={isUnlocked} />
+           
+           <div className="text-center mt-10">
+              <p className="text-sm text-gray-400">
+                 Hover over the stack to reveal your offers.
+              </p>
+           </div>
+        </section>
+
+      </main>
     </div>
   );
 }
