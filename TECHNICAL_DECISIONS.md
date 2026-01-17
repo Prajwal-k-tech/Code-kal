@@ -1,255 +1,358 @@
 # ZeroKlue Technical Decisions
 
-> **Last Updated**: January 17, 2026  
-> **Status**: Scaffold Ready for Development
+**Version**: 2.0  
+**Last Updated**: January 17, 2026
 
 ---
 
-## Quick Links for Team
-- [PRD.md](./PRD.md) - Product Requirements
-- [ENGINEERING_PLAN.md](./ENGINEERING_PLAN.md) - Implementation Plan
-- [TEAM_PLAN.md](./TEAM_PLAN.md) - Role Assignments
-- [HACKATHON_QA.md](./HACKATHON_QA.md) - Anticipated Questions
+## Decision Log
+
+This document captures the key technical decisions made during ZeroKlue development, the alternatives considered, and the rationale behind each choice.
 
 ---
 
-## Key Technical Decisions
+## Decision 1: Fork StealthNote Instead of OTP-based Approach
 
-### 1. Email Domain Verification ✅ DECIDED
+### Context
+Original plan was to verify students via:
+1. User enters .edu email
+2. Backend sends OTP
+3. User enters OTP
+4. Backend verifies → signs attestation
+5. ZK proof generated from attestation
 
-**Approach**: Use [Hipo University Domains API](https://github.com/Hipo/university-domains-list)
+### Problem Identified
+**We would be the trusted party.**
 
+If users trust us to verify OTPs correctly, they might as well trust us to say "this person is a student." The ZK layer only adds:
+- Privacy from blockchain observers
+- Some tamper-resistance
+
+But it doesn't provide **true trustlessness**.
+
+### Alternative: StealthNote Approach
+StealthNote uses Google OAuth:
+1. User signs in with Google
+2. Google returns signed JWT
+3. JWT contains `email_verified: true`, `hd: "university.edu"`
+4. ZK circuit verifies RSA signature from Google's public key
+5. **Google is the trusted party, not us**
+
+### Decision
+**Fork StealthNote's circuit and proof generation.**
+
+**Rationale:**
+- Google is already trusted by universities for email
+- Google's security is orders of magnitude better than ours
+- JWT signatures are cryptographically verifiable
+- StealthNote has proven this works (MIT licensed)
+
+### Trade-offs
+| Factor | OTP Approach | StealthNote Fork |
+|--------|--------------|------------------|
+| Trustlessness | ❌ We are trusted | ✅ Google is trusted |
+| Backend needed | ✅ Yes (OTP service) | ❌ None |
+| Complexity | Lower | Higher (JWT parsing) |
+| Coverage | Any email | Google Workspace only |
+| Time to build | 2-3 days | 1 day (porting) |
+
+---
+
+## Decision 2: Keep Scaffold-ETH 2 + Port StealthNote Circuit
+
+### Context
+After deciding to use StealthNote's approach, we had options:
+1. Fork entire StealthNote repo, add wallet integration
+2. Start fresh with StealthNote's circuit
+3. **Hybrid**: Keep our Scaffold-ETH base, port StealthNote's circuit
+
+### Decision
+**Hybrid approach: Scaffold-ETH 2 base + StealthNote circuit**
+
+### Rationale
+StealthNote lacks:
+- Wallet connection
+- Smart contract interaction
+- NFT minting
+- On-chain verification
+
+Scaffold-ETH already has:
+- RainbowKit/wagmi wallet integration
+- Foundry contract deployment
+- Contract interaction hooks
+- Responsive UI with TailwindCSS
+
+By porting only what we need (circuit + OAuth helpers), we get the best of both.
+
+### What We Port
+| From StealthNote | To Our Project |
+|------------------|----------------|
+| `circuit/src/main.nr` | `packages/circuits/src/main.nr` |
+| `circuit/Nargo.toml` | `packages/circuits/Nargo.toml` |
+| `app/lib/providers/google-oauth.ts` | `packages/nextjs/lib/google-oauth.ts` |
+| `app/lib/circuits/jwt.ts` | `packages/nextjs/lib/circuits/jwt.ts` |
+| `app/lib/circuits/ephemeral-key.ts` | `packages/nextjs/lib/circuits/ephemeral-key.ts` |
+
+### What We Keep (Scaffold-ETH)
+- `packages/foundry/` - Contract deployment
+- `packages/nextjs/` - Base frontend structure
+- `wagmi` + `viem` - Contract interaction
+- `RainbowKit` - Wallet connection
+
+---
+
+## Decision 3: Soulbound NFT vs. Simple Mapping
+
+### Options
+1. **Simple mapping**: `mapping(address => bool) public isStudent`
+2. **ERC-721 NFT**: Full NFT with metadata, ownership, etc.
+3. **Soulbound NFT**: ERC-721 that can't be transferred
+
+### Decision
+**Soulbound ERC-721 NFT**
+
+### Rationale
+| Feature | Mapping | Standard NFT | Soulbound NFT |
+|---------|---------|--------------|---------------|
+| Query verified status | ✅ | ✅ | ✅ |
+| Store metadata | ❌ | ✅ | ✅ |
+| Wallet displays it | ❌ | ✅ | ✅ |
+| User can sell it | N/A | ✅ ❌ | ❌ ✅ |
+| OpenSea/marketplaces | ❌ | ✅ | ✅ (view only) |
+| Gas cost | Lower | Higher | Higher |
+
+Soulbound prevents abuse (can't sell student status) while still appearing in wallets and being queryable by other contracts.
+
+---
+
+## Decision 4: Local Chain First (Anvil)
+
+### Context
+For a hackathon demo, we need to balance:
+- Speed of iteration
+- Realistic demo
+- Gas costs
+
+### Options
+1. Mainnet - Real but expensive
+2. Testnet (Sepolia) - Real network, free faucet
+3. Local Anvil - Instant, free, controlled
+
+### Decision
+**Anvil for development and demo, Sepolia as stretch goal**
+
+### Rationale
+- Anvil is instant (no waiting for blocks)
+- No faucet issues (unlimited ETH)
+- Still validates entire flow
+- Can switch to Sepolia with one config change
+
+### Configuration
 ```typescript
-// Free hosted API - no setup needed!
-const response = await fetch(
-  `http://universities.hipolabs.com/search?domain=${emailDomain}`
-);
-const universities = await response.json();
-const isValid = universities.length > 0;
+// scaffold.config.ts
+targetNetworks: [chains.anvil], // or chains.sepolia for testnet
 ```
-
-**Fallback**: Local JSON with common domains including:
-- `.iiitkottayam.ac.in` (our university)
-- `.ac.in`, `.edu`, `.ac.uk` (general patterns)
-
-**Why**: 
-- 1.5K+ stars, actively maintained
-- Free hosted API
-- Contains 10,000+ universities worldwide
-- No API key needed
 
 ---
 
-### 2. UX Flow ✅ DECIDED
+## Decision 5: Domain Hash as Public Input
 
-**Changed from PRD**: Show offers FIRST, then prompt verification
+### Context
+The ZK proof needs to prove "user has valid JWT from @university.edu" without revealing which university specifically to the contract.
 
+### Options
+1. Reveal full domain → No privacy
+2. Reveal domain hash → Verifiable but private
+3. Reveal nothing → No university-specific logic possible
+
+### Decision
+**Reveal domain hash as public input**
+
+### Rationale
+- Partners can verify proof came from their domain
+- Users can't fake being from a different university
+- Actual domain name stays private on-chain
+- Off-chain, partners can check `keccak256("university.edu") == domainHash`
+
+### Implementation
+```solidity
+// In ZeroKlue.sol
+mapping(uint256 => bytes32) public tokenDomainHash;
+
+// Partner verification (off-chain)
+const expectedHash = keccak256(toUtf8Bytes("university.edu"));
+const matches = expectedHash === tokenDomainHash;
 ```
-┌─────────────────────────────────────────────────────┐
-│  NEW FLOW (Better UX)                               │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  1. Landing Page → Show locked offer cards          │
-│     "See what discounts you could unlock!"          │
-│                                                     │
-│  2. Click "Unlock Offers" → Start verification      │
-│     - Email entry                                   │
-│     - OTP verification                              │
-│     - Wallet connection                             │
-│     - Proof generation                              │
-│     - NFT mint                                      │
-│                                                     │
-│  3. Return to marketplace → All unlocked! 🎉        │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-**Why**: Users see value before asking for verification
 
 ---
 
-### 3. Email/OTP Delivery ✅ DECIDED
+## Decision 6: Nullifier for Sybil Resistance
 
-**Primary**: [Resend](https://resend.com) - 100 emails/day FREE
-- Perfect for hackathon demo
-- 5-minute setup
-- Clean React Email templates
+### Context
+Users shouldn't be able to mint multiple NFTs from the same Google account.
 
-**Fallback for Dev**: 
-```typescript
-if (process.env.NODE_ENV === 'development') {
-  console.log(`🔐 OTP for ${email}: ${otp}`);
-  return; // Skip email sending
+### Approach
+A **nullifier** is derived from:
+- User's unique identifier (email or sub)
+- A secret (ephemeral key)
+
+The nullifier can be verified without revealing the email.
+
+### Implementation
+```noir
+// In circuit
+let nullifier = hash([jwt.sub, ephemeral_secret]);
+// nullifier is public output
+```
+
+```solidity
+// In contract
+mapping(bytes32 => bool) public usedNullifiers;
+
+function verifyAndMint(...) {
+    bytes32 nullifier = publicInputs[1];
+    require(!usedNullifiers[nullifier], "Already verified");
+    usedNullifiers[nullifier] = true;
+    // ...
 }
 ```
 
-**Alternative Free Options**:
-- Mailazy (free tier)
-- Nodemailer + Gmail (for testing)
+### Trade-off
+If a user wants to verify from a new wallet, they'd need a new Google account. This is intentional - one verification per Google account.
 
 ---
 
-### 4. ZK Proof Implementation ✅ DECIDED
+## Decision 7: Client-Side Proof Generation
 
-**THIS IS REAL ZK - Our Core Value Prop!**
+### Context
+ZK proof generation takes 20-40 seconds on modern hardware.
 
-**Stack**:
-- [Noir](https://noir-lang.org/) 0.38.0 - Circuit language
-- [EdDSA Library](https://github.com/noir-lang/eddsa) - Signature verification
-- [NoirJS](https://noir-lang.org/docs/tutorials/noirjs_app) - Browser proving
-- [Barretenberg](https://github.com/AztecProtocol/barretenberg) - Proving backend (UltraHonk)
+### Options
+1. **Client-side**: User's browser generates proof
+2. **Server-side**: Our server generates proof (needs user's JWT!)
+3. **Proving service**: Third-party generates proof
 
-**Circuit Logic**:
-```noir
-// What we're proving:
-// 1. I have a valid signature from ZeroKlue (issuer)
-// 2. The signature is over my wallet address
-// 3. I know a secret that derives to the public nullifier
-// 4. Therefore: I'm a verified student, but you don't know my email
-```
+### Decision
+**Client-side only (browser)**
 
-**Resources from awesome-noir**:
-- [EdDSA](https://github.com/noir-lang/eddsa) - Signature verification
-- [Poseidon](https://github.com/noir-lang/poseidon) - Hashing
-- [NoirJS Tutorial](https://noir-lang.org/docs/tutorials/noirjs_app) - Browser integration
-- [foundry-noir-helper](https://github.com/0xnonso/foundry-noir-helper) - Contract integration
+### Rationale
+- **Privacy**: JWT never leaves user's browser
+- **Trustless**: We never see user's credentials
+- **Security**: No server to hack
+- **Scalability**: Users' devices are distributed compute
 
----
+### Trade-off
+- 20-40 second wait for proof generation
+- Bad on low-end devices
+- WebAssembly support required
 
-### 5. Merchant Demo ✅ DECIDED
-
-**Location**: `/merchant` route in same Next.js app
-
-**Features**:
-- Simple product page (TechMart)
-- "Student Discount" toggle
-- NFT ownership check via wagmi
-- Price update animation
+### Mitigation
+- Show progress indicator with expected time
+- Use web workers to not block UI
+- Warn users on mobile (suggest desktop)
 
 ---
 
-### 6. Frontend Architecture ✅ DECIDED
+## Decision 8: noir-jwt Library for JWT Verification
 
-Following [Vercel React Best Practices](https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices):
+### Context
+Need to verify Google's JWT signature inside a ZK circuit.
 
-- ✅ Suspense boundaries for proof generation
-- ✅ Dynamic imports for NoirJS (heavy bundle)
-- ✅ SWR for caching wallet/NFT status
-- ✅ content-visibility for offer cards
+### Options
+1. Write RSA verification from scratch
+2. Use noir-jwt library (by Saleel, StealthNote author)
+3. Use circom-compat and port circom-jwt
 
----
+### Decision
+**Use noir-jwt v0.4.4**
 
-## Folder Structure for Team
+### Rationale
+- Written by StealthNote author
+- Already integrated with Google OAuth
+- Actively maintained
+- Handles JWT parsing, RSA-SHA256, etc.
+- MIT licensed
 
-```
-zeroklue-app/
-├── packages/
-│   ├── foundry/                    # 👤 CONTRACTS DEV
-│   │   └── contracts/
-│   │       ├── ZeroKlue.sol        # Main contract (exists)
-│   │       └── UltraVerifier.sol   # Generated from Noir
-│   │
-│   └── nextjs/                     # 👤 FRONTEND DEVS
-│       ├── app/
-│       │   ├── page.tsx            # Landing + Locked offers
-│       │   ├── verify/
-│       │   │   └── page.tsx        # Verification flow
-│       │   ├── marketplace/
-│       │   │   └── page.tsx        # Unlocked offers
-│       │   └── merchant/
-│       │       └── page.tsx        # Demo merchant site
-│       │
-│       ├── components/
-│       │   ├── offers/             # Offer card components
-│       │   ├── verify/             # Email/OTP/Wallet components
-│       │   ├── proof/              # Proof generation UI
-│       │   └── shared/             # Shared UI components
-│       │
-│       └── lib/
-│           ├── noir/               # NoirJS integration
-│           ├── universities/       # Domain validation
-│           └── api/                # Backend API calls
-│
-├── packages/
-│   ├── backend/                    # 👤 BACKEND DEV
-│   │   └── src/
-│   │       ├── routes/
-│   │       │   └── verify.ts       # OTP endpoints
-│   │       └── services/
-│   │           ├── otpService.ts   # OTP logic
-│   │           └── cryptoService.ts # Credential signing
-│   │
-│   └── circuits/                   # 👤 ZK DEV
-│       └── src/
-│           └── main.nr             # Noir circuit
+### Dependency
+```toml
+[dependencies]
+jwt = { tag = "v0.4.4", git = "https://github.com/saleel/noir-jwt" }
 ```
 
 ---
 
-## Team Assignment
+## Decision 9: UltraHonk vs. UltraPlonk for Verification
 
-| Role | Person | Primary Files |
-|------|--------|---------------|
-| **Frontend 1** | - | `app/verify/`, `components/verify/` |
-| **Frontend 2** | - | `app/marketplace/`, `components/offers/` |
-| **Backend** | - | `packages/backend/` |
-| **Contracts** | - | `packages/foundry/contracts/` |
-| **ZK Circuit** | - | `packages/circuits/` |
+### Context
+Barretenberg supports multiple proof systems for Solidity verification.
 
----
+### Options
+1. **UltraPlonk**: Older, more tested
+2. **UltraHonk**: Newer, faster verification on-chain
 
-## Git Workflow
+### Decision
+**UltraHonk** (default in recent bb.js)
 
-1. **Main branch**: `main` - Protected, requires PR
-2. **Feature branches**: `feature/<your-feature>`
-3. **Naming**: `feature/email-verification`, `feature/offer-cards`
-
-```bash
-# Clone and start
-git clone https://github.com/Prajwal-k-tech/Code-kal.git
-cd Code-kal
-git checkout -b feature/your-feature
-
-# Work, commit, push
-git add .
-git commit -m "feat: your feature"
-git push -u origin feature/your-feature
-
-# Open PR on GitHub
-```
+### Rationale
+- Lower gas costs (~200-300K vs 400K+)
+- Same security guarantees
+- Default in current Barretenberg
+- StealthNote examples use it
 
 ---
 
-## Environment Variables Needed
+## Decision 10: Google Workspace Limitation
 
-```bash
-# .env.local (Frontend)
-NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_id
-NEXT_PUBLIC_ALCHEMY_API_KEY=your_key
+### Acknowledged Limitation
+Our approach only works for:
+- Universities using Google Workspace (most do)
+- Companies using Google Workspace
 
-# .env (Backend)
-RESEND_API_KEY=re_xxxxx
-ISSUER_PRIVATE_KEY=0x... # EdDSA private key for signing credentials
-REDIS_URL=redis://localhost:6379 # Optional, can use in-memory for demo
-```
+**Does NOT work for:**
+- Universities with custom email systems
+- Outlook/Microsoft 365 domains
+
+### Mitigation Ideas (Future)
+1. Add Microsoft OAuth path (similar approach, different JWT format)
+2. Fall back to OTP for non-Google domains
+3. Partner with specific universities for custom integration
+
+### For Hackathon
+Scope to Google Workspace only. Covers 80%+ of universities.
 
 ---
 
-## Quick Start Commands
+## Summary Table
 
-```bash
-# Install all dependencies
-pnpm install
+| Decision | Choice | Key Reason |
+|----------|--------|------------|
+| Core approach | Fork StealthNote | True trustlessness |
+| Stack | Scaffold-ETH + StealthNote | Best of both |
+| Token | Soulbound NFT | Prevents resale |
+| Network | Anvil first | Speed, free |
+| Domain privacy | Hash as public | Verifiable + private |
+| Sybil resistance | Nullifier | One per Google account |
+| Proof generation | Client-side | Privacy |
+| JWT library | noir-jwt | Proven, maintained |
+| Proof system | UltraHonk | Lower gas |
+| OAuth scope | Google only | 80% coverage, complexity |
 
-# Frontend (zeroklue-app)
-cd zeroklue-app && pnpm dev
+---
 
-# Backend
-cd packages/backend && pnpm dev
+## Open Questions
 
-# Circuits (compile)
-cd packages/circuits && nargo compile
+1. **Re-verification**: If student graduates, can we invalidate their NFT?
+   - Possible: Add expiration timestamp
+   - Complex: Requires oracle for graduation status
 
-# Contracts (test)
-cd zeroklue-app/packages/foundry && forge test
-```
+2. **Multiple wallets**: What if student wants to verify on new wallet?
+   - Current: Not supported (nullifier prevents)
+   - Future: Could add wallet rotation mechanism
+
+3. **Partner integration**: How do partners verify domain hash?
+   - MVP: Off-chain, we provide lookup
+   - Future: On-chain registry of domain hashes
+
+---
+
+*Last updated by team after StealthNote research phase.*

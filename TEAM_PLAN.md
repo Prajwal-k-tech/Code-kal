@@ -1,529 +1,218 @@
-# ZeroKlue Project Analysis: Using Anon-Aadhaar Architecture
+# ZeroKlue Team Plan & Task Division
 
-## Key Insights from Anon-Aadhaar
-
-### What Anon-Aadhaar Does
-- Proves ownership of Indian Aadhaar ID without revealing identity
-- Uses RSA signature verification (Aadhaar QR codes have RSA signatures)
-- Circuit size: ~237K gates (heavy but proven to work)
-- Proving time: ~2.6 seconds on M1 Mac
-
-### Why This is PERFECT for ZeroKlue
-
-Anon-Aadhaar solves the EXACT same problem we have:
-1. **Government credential** (Aadhaar) → **University credential** (email)
-2. **RSA signature verification** → **EdDSA signature verification** (simpler!)
-3. **Selective disclosure** → **Binary disclosure** (student or not)
-4. **Nullifier for sybil resistance** → **Same pattern!**
-
-### What We Can Learn
-
-**Architecture Pattern**:
-```
-Anon-Aadhaar:
-Aadhaar QR → RSA Signature → Noir Circuit → Proof → Smart Contract
-
-ZeroKlue (Simplified):
-University Email → EdDSA Signature → Noir Circuit → Proof → Smart Contract
-```
-
-**Key Difference**: We're MUCH simpler because:
-- EdDSA << RSA (in circuit complexity)
-- No need for QR code parsing
-- Simpler identity data (just email domain, not full ID card)
+**Version**: 2.0 (StealthNote Fork Approach)  
+**Team Size**: 3 people  
+**Timeline**: 24 hours
 
 ---
 
-## Useful Libraries from awesome-noir
+## Team Roles
 
-### Must-Use
-
-1. **EdDSA Signature Verification**
-   - `https://github.com/noir-lang/eddsa` ✅
-   - Already in our plan, validated by Anon-Aadhaar's approach
-
-2. **Poseidon Hash** (for nullifiers)
-   - `https://github.com/noir-lang/poseidon` ✅
-   - Used in Anon-Aadhaar for nullifiers
-
-3. **hardhat-noir**
-   - `https://github.com/olehmisar/hardhat-noir` ✅
-   - Auto-generates Solidity verifier
-   - Integrates Noir into Hardhat workflow
-
-### Nice-to-Have
-
-4. **zkEmail Patterns** (if we want to upgrade later)
-   - `https://github.com/zkemail/zkemail.nr`
-   - Could verify actual email contents (vs just OTP)
-
-5. **Merkle Trees** (for issuer allowlist)
-   - `https://github.com/noir-lang/merkle`
-   - Instead of hardcoded issuer keys, use Merkle proof
+| Role | Person | Focus Area |
+|------|--------|------------|
+| **Blockchain Lead** | Prajwal | Circuit porting, Solidity contracts, on-chain verification |
+| **Frontend Lead** | Frontend Dev 1 | Google OAuth, proof generation, wallet integration |
+| **UI/UX Lead** | Frontend Dev 2 | Marketplace UI, styling, demo polish |
 
 ---
 
-## Simplified Circuit (Inspired by Anon-Aadhaar)
+## What We're Porting from StealthNote
 
-```noir
-// Much simpler than Anon-Aadhaar because EdDSA << RSA
-
-use dep::std;
-use dep::eddsa;
-
-fn main(
-    // Public inputs (visible on-chain)
-    issuer_pubkey_x: Field,
-    issuer_pubkey_y: Field,
-    nullifier: Field,
-    wallet_address: Field,
-    
-    // Private inputs (hidden)
-    signature_r: Field,
-    signature_s: Field,
-    nullifier_seed: Field,
-) {
-    // 1. Verify EdDSA signature on wallet_address
-    let message = [wallet_address];
-    let pubkey = [issuer_pubkey_x, issuer_pubkey_y];
-    let signature = [signature_r, signature_s];
-    
-    let valid = eddsa::eddsa_poseidon_verify(pubkey, signature, message);
-    assert(valid);
-    
-    // 2. Verify nullifier derivation
-    let computed_nullifier = std::hash::poseidon::bn254::hash_1([nullifier_seed]);
-    assert(nullifier == computed_nullifier);
-}
+```
+StealthNote (cloned to /tmp/research-zk/stealthnote/)
+├── circuit/
+│   ├── src/main.nr          ──→ packages/circuits/src/main.nr
+│   └── Nargo.toml           ──→ packages/circuits/Nargo.toml
+├── app/lib/
+│   ├── providers/
+│   │   └── google-oauth.ts  ──→ packages/nextjs/lib/google-oauth.ts
+│   ├── circuits/
+│   │   ├── jwt.ts           ──→ packages/nextjs/lib/circuits/jwt.ts
+│   │   └── ephemeral-key.ts ──→ packages/nextjs/lib/circuits/ephemeral-key.ts
+│   └── utils/
+│       └── various          ──→ packages/nextjs/lib/utils/
 ```
 
-**Circuit Complexity Estimate**:
-- EdDSA verify: ~10K constraints
-- Poseidon hash: ~200 constraints
-- **Total: ~10-15K constraints** (vs Anon-Aadhaar's 237K!)
+---
 
-**Expected Performance**:
-- Proving: <5 seconds
-- Verification: <0.05 seconds
+## Detailed Task Breakdown
+
+### Hour 0-2: Setup & Understanding
+
+| Task | Owner | Time | Deliverable |
+|------|-------|------|-------------|
+| Study StealthNote codebase | ALL | 1h | Understand OAuth + proof flow |
+| Port circuit files | Prajwal | 30m | Working `packages/circuits/` |
+| Test circuit compiles | Prajwal | 30m | `nargo compile` succeeds |
+
+### Hour 2-6: Core Infrastructure
+
+| Task | Owner | Time | Deliverable |
+|------|-------|------|-------------|
+| Generate Solidity verifier | Prajwal | 1h | `Verifier.sol` in foundry |
+| Write ZeroKlue.sol | Prajwal | 2h | NFT + nullifier contract |
+| Contract tests | Prajwal | 1h | Foundry tests passing |
+| Port OAuth helpers | Frontend 1 | 2h | Google sign-in working |
+| Port proof gen helpers | Frontend 1 | 2h | JWT proof generation working |
+
+### Hour 6-12: Frontend Integration
+
+| Task | Owner | Time | Deliverable |
+|------|-------|------|-------------|
+| Connect wallet + OAuth flow | Frontend 1 | 2h | Full verification flow |
+| Proof → Contract submission | Frontend 1 | 2h | NFT minted on success |
+| Error handling | Frontend 1 | 2h | User-friendly errors |
+| Landing page | Frontend 2 | 2h | Hero section, how it works |
+| Verification UI | Frontend 2 | 2h | Progress steps, loading states |
+| Marketplace grid | Frontend 2 | 2h | Offer cards (mock data) |
+
+### Hour 12-18: Integration & Testing
+
+| Task | Owner | Time | Deliverable |
+|------|-------|------|-------------|
+| E2E integration test | Prajwal | 2h | Full flow on localhost |
+| Deploy to Anvil | Prajwal | 1h | Contracts on local chain |
+| Gas optimization | Prajwal | 1h | Reasonable verification cost |
+| Frontend polish | Frontend 2 | 3h | Animations, responsive |
+| Connect UI to contracts | Frontend 1 | 2h | Live contract calls |
+| Bug fixes | ALL | 2h | Stability |
+
+### Hour 18-24: Demo Prep
+
+| Task | Owner | Time | Deliverable |
+|------|-------|------|-------------|
+| Demo script | Prajwal | 1h | Step-by-step demo plan |
+| Presentation slides | Frontend 2 | 2h | Pitch deck |
+| Practice demo | ALL | 1h | Smooth presentation |
+| Final testing | ALL | 2h | Everything works |
+| Buffer for issues | ALL | 2h | Flex time |
 
 ---
 
-## Recommended Stack Adjustments
+## Critical Path
 
-### Use hardhat-noir Plugin
+```
+    HOUR 0          HOUR 6          HOUR 12         HOUR 18         HOUR 24
+      │               │               │               │               │
+      ▼               ▼               ▼               ▼               ▼
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │ PRAJWAL: Circuit → Verifier.sol → ZeroKlue.sol → Integration → Demo │
+    └─────────────────────────────────────────────────────────────────────┘
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │ FRONTEND 1: Study → Port OAuth → Port Proof → Connect → E2E        │
+    └─────────────────────────────────────────────────────────────────────┘
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │ FRONTEND 2: Study → Landing → Verify UI → Marketplace → Polish     │
+    └─────────────────────────────────────────────────────────────────────┘
+```
 
-Instead of manual Noir compilation, use hardhat-noir:
+**Blocking Dependencies:**
+1. Circuit must compile → before Solidity verifier
+2. Solidity verifier → before ZeroKlue.sol integration
+3. OAuth helpers → before Frontend can test
+4. Proof generation → before Contract submission
+
+---
+
+## Parallel Work Streams
+
+### Stream 1: Contracts (Prajwal)
+```
+packages/circuits/      ──→ packages/foundry/contracts/
+     main.nr                    Verifier.sol
+                                ZeroKlue.sol
+```
+
+### Stream 2: Auth & Proof (Frontend 1)
+```
+packages/nextjs/lib/
+    google-oauth.ts     ──→ VerifyStudent.tsx
+    circuits/jwt.ts          useStudentVerification.ts
+```
+
+### Stream 3: UI (Frontend 2)
+```
+packages/nextjs/
+    app/page.tsx
+    components/
+        DiscountMarketplace.tsx
+        StudentNFT.tsx
+        VerificationProgress.tsx
+```
+
+---
+
+## Communication Checkpoints
+
+| Time | Checkpoint | Goal |
+|------|------------|------|
+| Hour 2 | Circuit compiles | Verify StealthNote port works |
+| Hour 6 | Contracts deploy | Verifier + NFT on localhost |
+| Hour 10 | OAuth works | Can sign in with Google |
+| Hour 14 | E2E works | Full flow completes once |
+| Hour 18 | Demo ready | Can show to someone |
+| Hour 22 | Final test | Everything stable |
+
+---
+
+## Risk Mitigation
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Circuit doesn't compile | Medium | HIGH | Test early, hour 0-2 |
+| Solidity verifier too big | Medium | HIGH | May need to split or simplify |
+| OAuth setup issues | Low | Medium | Use localhost, no domain needed |
+| Proof generation slow | Low | Low | Expected 20-40s, show loading |
+| Gas too high | Medium | Medium | Demo on localhost, no real gas |
+
+---
+
+## File Ownership
+
+| File/Folder | Owner | Status |
+|-------------|-------|--------|
+| `packages/circuits/` | Prajwal | 🔴 Not started |
+| `packages/foundry/contracts/Verifier.sol` | Prajwal | 🔴 Not started |
+| `packages/foundry/contracts/ZeroKlue.sol` | Prajwal | 🔴 Not started |
+| `packages/nextjs/lib/google-oauth.ts` | Frontend 1 | 🔴 Not started |
+| `packages/nextjs/lib/circuits/` | Frontend 1 | 🔴 Not started |
+| `packages/nextjs/components/VerifyStudent.tsx` | Frontend 1 | 🔴 Not started |
+| `packages/nextjs/app/page.tsx` | Frontend 2 | 🔴 Not started |
+| `packages/nextjs/components/DiscountMarketplace.tsx` | Frontend 2 | 🔴 Not started |
+
+---
+
+## Quick Commands
 
 ```bash
-npm install --save-dev hardhat-noir
-```
+# Prajwal - Circuit & Contracts
+cd packages/circuits && nargo compile
+bb write_vk -b ./target/main.json -o ./target --oracle_hash keccak
+bb write_solidity_verifier -k ./target/vk -o ../foundry/contracts/Verifier.sol
+cd ../foundry && forge test
 
-Benefits:
-- Auto-compiles Noir on `npx hardhat compile`
-- Auto-generates Solidity verifier
-- Integrated workflow
+# Frontend 1 - Start dev
+cd zeroklue-app && yarn install && yarn start
 
----
-
-## 4-Person Team Split (22.5 Hours)
-
-### Team Structure
-
-```
-Person 1: Frontend Lead
-Person 2: Backend + DevOps
-Person 3: Circuits + Crypto
-Person 4: Smart Contracts + Integration
+# Frontend 2 - Just UI work
+cd zeroklue-app/packages/nextjs && yarn dev
 ```
 
 ---
 
-## Hour-by-Hour Plan (22.5 Hours)
-
-### Hours 0-2: Setup (Everyone Together)
-
-**All**: 
-- [ ] Clone repo structure
-- [ ] Install dependencies
-- [ ] Set up .env files
-- [ ] Test basic compilation
-- [ ] Git setup + first commit
-
----
-
-### Hours 2-8: Parallel Development
-
-#### Person 1: Frontend Foundation
-
-**Hours 2-4**: Setup
-- [ ] Initialize Next.js with RainbowKit
-- [ ] Set up Tailwind + shadcn/ui
-- [ ] Create basic layout and routing
-- [ ] Wire up wallet connection
-
-**Hours 4-6**: Email Verification UI
-- [ ] Email input form
-- [ ] OTP input component
-- [ ] Loading states
-- [ ] Error handling UI
-
-**Hours 6-8**: Marketplace UI
-- [ ] Create offer cards (4 total)
-- [ ] Locked/unlocked states
-- [ ] Grid layout
-- [ ] Basic animations
-
-**Deliverable**: Beautiful UI, no backend integration yet
-
----
-
-#### Person 2: Backend + Infrastructure
-
-**Hours 2-4**: Backend Setup
-- [ ] Initialize Express server
-- [ ] Set up Redis for OTPs
-- [ ] Configure email service (Resend)
-- [ ] Domain allowlist config
-
-**Hours 4-6**: API Endpoints
-- [ ] `/verify-email` endpoint (send OTP)
-- [ ] `/verify-otp` endpoint (verify + sign)
-- [ ] Generate EdDSA keypair
-- [ ] Sign credentials with `@noble/curves`
-
-**Hours 6-8**: Deployment Prep
-- [ ] Deploy backend to Railway/Render
-- [ ] Set up environment variables
-- [ ] CORS configuration
-- [ ] Health check endpoint
-
-**Deliverable**: Working API deployed and accessible
-
----
-
-#### Person 3: Circuits + Crypto
-
-**Hours 2-3**: Circuit Setup
-- [ ] Initialize Noir project
-- [ ] Add eddsa dependency
-- [ ] Study Anon-Aadhaar circuit patterns
-
-**Hours 3-5**: Write Circuit
-- [ ] Define inputs/outputs
-- [ ] Implement signature verification
-- [ ] Implement nullifier logic
-- [ ] Add assertions
-
-**Hours 5-7**: Test & Compile
-- [ ] Write test inputs (Prover.toml)
-- [ ] Test with `nargo prove`
-- [ ] Debug any circuit errors
-- [ ] Compile circuit
-
-**Hours 7-8**: Generate Verifier
-- [ ] Generate vk with barretenberg
-- [ ] Generate Solidity verifier
-- [ ] Document circuit inputs/outputs
-
-**Deliverable**: Working Noir circuit + Solidity verifier
-
----
-
-#### Person 4: Smart Contracts
-
-**Hours 2-4**: Contract Setup
-- [ ] Initialize Hardhat project
-- [ ] Install hardhat-noir plugin
-- [ ] Set up Holesky network config
-- [ ] Get testnet ETH from faucet
-
-**Hours 4-6**: Write Contracts
-- [ ] Create ZeroKlueStudentPass contract
-- [ ] Import generated verifier
-- [ ] Implement verifyAndMint function
-- [ ] Make NFT soulbound
-- [ ] Write tests
-
-**Hours 6-8**: Deploy & Verify
-- [ ] Deploy to Holesky testnet
-- [ ] Verify on Etherscan
-- [ ] Test contract functions
-- [ ] Document contract addresses
-
-**Deliverable**: Deployed & verified contracts
-
----
-
-### Hours 8-12: Integration (Pairs)
-
-#### Person 1 + Person 3: Frontend ↔ Circuits
-
-**Hours 8-10**: NoirJS Integration
-- [ ] Copy circuit artifacts to `/public`
-- [ ] Create proof generation module
-- [ ] Test proof generation in browser
-- [ ] Handle WASM loading
-
-**Hours 10-12**: Proof Modal
-- [ ] Create proof generation UI
-- [ ] Show progress steps
-- [ ] Handle errors
-- [ ] Test with mock credentials
-
-**Deliverable**: Working proof generation in browser
-
----
-
-#### Person 2 + Person 4: Backend ↔ Contracts
-
-**Hours 8-10**: Credential Signing
-- [ ] Test EdDSA signing with circuit inputs
-- [ ] Ensure signature format matches circuit
-- [ ] Debug signature verification
-- [ ] Create test credentials
-
-**Hours 10-12**: Contract Integration
-- [ ] Test proof submission to contract
-- [ ] Handle transaction signing
-- [ ] Parse events
-- [ ] Error handling
-
-**Deliverable**: Backend credentials verify in circuit → mint NFT
-
----
-
-### Hours 12-16: End-to-End Integration
-
-**All Together**:
-
-**Hours 12-14**: Connect All Pieces
-- [ ] Frontend calls backend API
-- [ ] Backend returns credential
-- [ ] Frontend generates proof
-- [ ] Frontend submits to contract
-- [ ] NFT mints successfully
-
-**Hours 14-16**: Bug Fixes
-- [ ] Test full flow 5 times
-- [ ] Fix edge cases
-- [ ] Handle wallet switching
-- [ ] Handle transaction failures
-
-**Deliverable**: Working E2E flow
-
----
-
-### Hours 16-20: Merchant Demo + Polish
-
-#### Person 1 + Person 2: Merchant Demo
-
-**Hours 16-18**: Create TechMart Site
-- [ ] New Next.js app (or subdirectory)
-- [ ] Product page design
-- [ ] Wallet connection
-- [ ] NFT check logic
-
-**Hours 18-20**: Polish
-- [ ] Student/non-student states
-- [ ] Price toggle
-- [ ] Pretty design
-- [ ] Deploy separately
-
-**Deliverable**: Beautiful merchant demo
-
----
-
-#### Person 3 + Person 4: Main App Polish
-
-**Hours 16-18**: UI/UX Polish
-- [ ] Smooth animations
-- [ ] Loading states
-- [ ] Success celebrations
-- [ ] Error messages
-- [ ] Mobile responsive
-
-**Hours 18-20**: Performance
-- [ ] Optimize proof generation
-- [ ] Add progress tracking
-- [ ] Test on multiple browsers
-- [ ] Fix any slowness
-
-**Deliverable**: Polished main app
-
----
-
-### Hours 20-22.5: Final Testing + Demo Prep
-
-**All Together**:
-
-**Hours 20-21**: Final Testing
-- [ ] Fresh wallet test
-- [ ] Different email domains
-- [ ] Transaction failures
-- [ ] Reverification attempt (should fail)
-- [ ] Merchant demo with/without NFT
-
-**Hours 21-22**: Documentation
-- [ ] README with screenshots
-- [ ] Demo script
-- [ ] Record backup video
-- [ ] Test demo flow 3 times
-
-**Hours 22-22.5**: Buffer
-- [ ] Fix last minute bugs
-- [ ] Deploy final versions
-- [ ] REST!
-
----
-
-## Tech Stack Finalized
-
-```json
-{
-  "circuits": {
-    "language": "Noir 0.38.0",
-    "backend": "Barretenberg 0.61.0",
-    "dependencies": ["eddsa", "poseidon"]
-  },
-  "contracts": {
-    "framework": "Hardhat",
-    "plugin": "hardhat-noir",
-    "network": "Holesky",
-    "solidity": "0.8.20"
-  },
-  "backend": {
-    "runtime": "Node.js + Express",
-    "signing": "@noble/curves (EdDSA)",
-    "email": "Resend",
-    "storage": "Redis (OTP only)",
-    "deploy": "Railway"
-  },
-  "frontend": {
-    "framework": "Next.js 14",
-    "wallet": "RainbowKit + wagmi",
-    "styling": "Tailwind + shadcn/ui",
-    "zk": "@noir-lang/noir_js",
-    "deploy": "Vercel"
-  }
-}
-```
-
----
-
-## Repository Structure
+## Success = Demo This Flow
 
 ```
-zeroklue/
-├── packages/
-│   ├── contracts/              # Person 4
-│   │   ├── circuits/           # Person 3's verifier goes here
-│   │   ├── contracts/
-│   │   │   └── ZeroKlue.sol
-│   │   ├── test/
-│   │   └── hardhat.config.ts
-│   │
-│   ├── circuits/               # Person 3
-│   │   ├── src/
-│   │   │   └── main.nr
-│   │   ├── Nargo.toml
-│   │   └── Prover.toml
-│   │
-│   ├── backend/                # Person 2
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   ├── routes/
-│   │   │   └── services/
-│   │   └── package.json
-│   │
-│   ├── frontend/               # Person 1
-│   │   ├── app/
-│   │   ├── components/
-│   │   ├── lib/
-│   │   └── package.json
-│   │
-│   └── merchant-demo/          # Person 1 + 2
-│       └── app/
-│
-├── docs/
-│   ├── PITCH.md
-│   ├── HACKATHON_QA.md
-│   └── PRD.md
-│
-└── README.md
+1. Land on zeroklue.xyz (localhost:3000)
+2. See locked offers (Spotify, GitHub, etc.)
+3. Click "Connect Wallet" → MetaMask connects
+4. Click "Verify with Google" → OAuth popup
+5. Sign in with @university.edu account
+6. See "Generating proof..." (20-40 seconds)
+7. See "Minting NFT..."
+8. 🎉 "You're verified!" + NFT card appears
+9. Offers are now unlocked
+10. Click one offer → shows verification success
 ```
 
----
-
-## What Each Person Needs RIGHT NOW
-
-### Person 1 (Frontend)
-```bash
-cd zeroklue
-npx create-next-app@latest packages/frontend
-cd packages/frontend
-npm install @rainbow-me/rainbowkit wagmi viem
-npm install @radix-ui/react-dialog
-npm install tailwindcss
-```
-
-### Person 2 (Backend)
-```bash
-cd zeroklue/packages
-mkdir backend && cd backend
-npm init -y
-npm install express cors redis resend @noble/curves dotenv
-npm install -D typescript @types/express @types/node
-```
-
-### Person 3 (Circuits)
-```bash
-cd zeroklue/packages
-mkdir circuits && cd circuits
-nargo new .
-# Add eddsa to Nargo.toml
-```
-
-### Person 4 (Contracts)
-```bash
-cd zeroklue/packages
-mkdir contracts && cd contracts
-npx hardhat init
-npm install --save-dev hardhat-noir
-npm install @openzeppelin/contracts
-```
-
----
-
-## Critical Decisions Made
-
-1. **Using EdDSA not ECDSA**: Inspired by Anon-Aadhaar, but simpler
-2. **Using hardhat-noir**: Better DX than manual workflow
-3. **Monorepo structure**: Easier to share types
-4. **Railway for backend**: Faster than AWS
-5. **Holesky only**: No need for mainnet
-
----
-
-## Success Metrics
-
-By Hour 12: ✅ All pieces work independently
-By Hour 16: ✅ E2E flow works once
-By Hour 20: ✅ E2E flow works reliably + polished
-By Hour 22: ✅ Demo-ready with backup video
-
----
-
-## Emergency Fallbacks
-
-If something breaks:
-
-1. **Circuit too slow?** → Use mock verification for demo, show circuit code
-2. **Proof generation fails?** → Pre-generate proof, show it in demo
-3. **Contract deployment fails?** → Use pre-deployed contract on testnet
-4. **Email service fails?** → Hardcode OTP for demo
-
-**Don't let one piece block everything!**
-
----
-
-Ready to start? Let me scaffold the initial structure! 🚀
+**That's it. If we can demo this flow, we win.**

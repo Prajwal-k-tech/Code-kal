@@ -1,0 +1,24 @@
+{
+  "universities": [
+    {
+      "name": "Indian Institute of Information Technology, Kottayam",
+      "domain": "iiitkottayam.ac.in",
+      "country": "India",
+      "alpha_two_code": "IN"
+    }
+  ],
+  "patterns": [
+    ".edu",
+    ".ac.in",
+    ".ac.uk",
+    ".edu.au",
+    ".edu.sg",
+    ".ac.jp",
+    ".edu.cn"
+  ],
+  "api": {
+    "endpoint": "http://universities.hipolabs.com/search",
+    "fallback": true,
+    "note": "Uses Hipo University Domains API (10K+ universities)"
+  }
+}

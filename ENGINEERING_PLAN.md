@@ -1,532 +1,534 @@
-# ZeroKlue Engineering Implementation Plan
+# ZeroKlue Engineering Plan
 
-> **Reality Check**: 22.5 hours, 4 people, hackathon environment
-
-## Critical Engineering Decision: Timestamp Anti-Abuse
-
-### Problem
-Students stay students for years, but some merchants want "currently enrolled" verification.
-
-### Solution: Time-Bounded NFTs
-
-```solidity
-struct StudentVerification {
-    uint256 verifiedAt;      // When proof was verified
-    uint256 nullifier;       // Prevents duplicate verifications
-}
-
-// Merchants can check age
-function isRecentlyVerified(address student, uint256 maxAge) public view returns (bool) {
-    StudentVerification memory verification = verifications[student];
-    return (block.timestamp - verification.verifiedAt) <= maxAge;
-}
-
-// Examples:
-// 1 year: isRecentlyVerified(user, 365 days)
-// 6 months: isRecentlyVerified(user, 180 days)
-// Forever: balanceOf(user) > 0
-```
-
-**Benefits**:
-- ✅ Merchants control their own policies
-- ✅ No forced expiry (NFT never burns)
-- ✅ Students can re-verify to refresh timestamp
-- ✅ Flexible for different use cases
+**Version**: 2.0 (StealthNote Fork)  
+**Last Updated**: January 17, 2026
 
 ---
 
-## Tech Stack (Revised - Practical for Hackathon)
-
-### ✅ What We're ACTUALLY Using
+## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────┐
-│         SCAFFOLD-ETH 2 (Base)               │
-├─────────────────────────────────────────────┤
-│ ✅ Foundry (contracts)                      │
-│ ✅ Next.js 14 (frontend)                    │
-│ ✅ RainbowKit (wallet)                      │
-│ ✅ wagmi/viem (Ethereum interaction)        │
-│ ✅ Tailwind + daisyUI (styling)             │
-└─────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────┐
-│         CUSTOM ADDITIONS                    │
-├─────────────────────────────────────────────┤
-│ ⚡ Noir 0.38.0 (ZK circuits)                │
-│ ⚡ Express API (email verification)         │
-│ ⚡ Redis (OTP storage)                      │
-│ ⚡ Resend (email delivery)                  │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                USER'S BROWSER                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌───────────────┐    ┌───────────────┐    ┌───────────────┐               │
+│  │   RainbowKit  │    │  Google OAuth │    │    NoirJS     │               │
+│  │   (Wallet)    │    │  (JWT Token)  │    │  (Proof Gen)  │               │
+│  └───────┬───────┘    └───────┬───────┘    └───────┬───────┘               │
+│          │                    │                    │                        │
+│          └────────────────────┼────────────────────┘                        │
+│                               │                                             │
+│                    ┌──────────▼──────────┐                                  │
+│                    │   Next.js Frontend  │                                  │
+│                    │   (Scaffold-ETH 2)  │                                  │
+│                    └──────────┬──────────┘                                  │
+│                               │                                             │
+└───────────────────────────────┼─────────────────────────────────────────────┘
+                                │
+                                │ JSON-RPC (wagmi/viem)
+                                │
+┌───────────────────────────────▼─────────────────────────────────────────────┐
+│                          ANVIL LOCAL CHAIN                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌───────────────────────┐         ┌───────────────────────┐               │
+│  │     Verifier.sol      │         │     ZeroKlue.sol      │               │
+│  │  (Auto-generated)     │◄───────►│    (ERC-721 NFT)      │               │
+│  ├───────────────────────┤         ├───────────────────────┤               │
+│  │ • verify(proof, pub)  │         │ • verifyAndMint()     │               │
+│  │ • UltraHonk verifier  │         │ • usedNullifiers[]    │               │
+│  │ • ~300K gas           │         │ • tokenDomainHash[]   │               │
+│  └───────────────────────┘         │ • Soulbound (no xfer) │               │
+│                                    └───────────────────────┘               │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
-
-### Why This Stack?
-
-| Technology | Why | Alternative Considered |
-|------------|-----|----------------------|
-| **Scaffold-ETH** | 2-hour setup → 15 minutes | Manual Next.js + Hardhat |
-| **Foundry** | Fast tests, better DX | Hardhat (slower) |
-| **NoirJS** | Client-side proving | Circom (more complex) |
-| **Resend** | 5-min email setup | SendGrid (overkill) |
-| **Redis** | OTP cache, no DB needed | PostgreSQL (overengineering) |
 
 ---
 
-## File Structure (After Scaffold)
+## File Structure (Final)
 
 ```
-zeroklue-app/
+codekal/
 ├── packages/
-│   ├── foundry/              # Smart contracts
-│   │   ├── contracts/
-│   │   │   └── ZeroKlue.sol
-│   │   ├── script/
-│   │   │   └── Deploy.s.sol
-│   │   └── test/
-│   │       └── ZeroKlue.t.sol
+│   ├── circuits/                    # Noir ZK circuit (ported from StealthNote)
+│   │   ├── Nargo.toml               # noir-jwt dependency
+│   │   └── src/
+│   │       └── main.nr              # JWT verification circuit
 │   │
-│   └── nextjs/               # Frontend
-│       ├── app/
-│       │   ├── page.tsx      # Main verification flow
-│       │   └── merchant/     # Merchant demo
-│       ├── components/
-│       │   ├── EmailVerify.tsx
-│       │   ├── ProofGenerator.tsx
-│       │   └── StudentPass.tsx
-│       └── lib/
-│           └── noir/         # Noir circuits + artifacts
+│   └── backend/                     # NOT NEEDED ANYMORE (can delete)
 │
-├── backend/                  # Express API (separate)
-│   ├── src/
-│   │   ├── routes/
-│   │   └── services/
-│   └── package.json
-│
-└── docs/
-    ├── PITCH.md
-    ├── HACKATHON_QA.md
-    ├── PRD.md
-    └── TEAM_PLAN.md
+└── zeroklue-app/                    # Scaffold-ETH 2 base
+    └── packages/
+        ├── foundry/                 # Smart contracts
+        │   ├── contracts/
+        │   │   ├── Verifier.sol     # Generated from bb
+        │   │   └── ZeroKlue.sol     # NFT + verification
+        │   ├── script/
+        │   │   └── Deploy.s.sol     # Deploy script
+        │   └── test/
+        │       └── ZeroKlue.t.sol   # Contract tests
+        │
+        └── nextjs/                  # Frontend
+            ├── app/
+            │   └── page.tsx         # Main page
+            ├── components/
+            │   ├── VerifyStudent.tsx
+            │   ├── DiscountMarketplace.tsx
+            │   └── StudentNFT.tsx
+            ├── lib/
+            │   ├── google-oauth.ts          # From StealthNote
+            │   ├── circuits/
+            │   │   ├── jwt.ts               # From StealthNote
+            │   │   └── ephemeral-key.ts     # From StealthNote
+            │   └── artifacts/
+            │       └── main.json            # Compiled circuit
+            └── hooks/
+                └── useStudentVerification.ts
 ```
 
 ---
 
-## Revised 4-Person Split (22.5 Hours)
+## Step-by-Step Implementation
 
-### Person 1: Frontend + Integration Lead
-**Location**: `zeroklue-app/packages/nextjs/`
+### Phase 1: Port StealthNote Circuit (Hour 0-2)
 
-**Hours 0-2: Scaffold Customization**
-- [ ] Remove example contracts UI
-- [ ] Create 3 pages: Verify, Marketplace, Merchant Demo
-- [ ] Set up routing
+**Step 1.1: Copy Circuit Files**
+```bash
+# From research folder
+cp -r /tmp/research-zk/stealthnote/circuit/* /home/prajwal-k/VS\ Code/codekal/packages/circuits/
+```
 
-**Hours 2-6: Email Verification UI**
-- [ ] Email input form with domain validation
-- [ ] OTP input component
-- [ ] Connect to backend API
-- [ ] Show credential in UI
+**Step 1.2: Verify Nargo.toml**
+```toml
+[package]
+name = "zeroklue"
+type = "bin"
+authors = ["ZeroKlue Team"]
+compiler_version = ">=1.0.0-beta.0"
 
-**Hours 6-10: Proof Generation**
-- [ ] Install NoirJS in Next.js
-- [ ] Create proof generation component
-- [ ] Show progress (compiling circuit → proving → submitting)
-- [ ] Handle errors gracefully
+[dependencies]
+jwt = { tag = "v0.4.4", git = "https://github.com/saleel/noir-jwt" }
+```
 
-**Hours 10-14: Marketplace**
-- [ ] 4 offer cards (unlocked/locked states)
-- [ ] Check NFT ownership
-- [ ] Beautiful animations
-
-**Hours 14-20: Polish + Merchant Demo**
-- [ ] Create merchant demo page
-- [ ] Test full flow 10 times
-- [ ] Mobile responsive
-- [ ] Add confetti on success 🎉
-
-**Hours 20-22.5: Final Testing**
-- [ ] Cross-browser testing
-- [ ] Deploy to Vercel
-- [ ] Record demo video
+**Step 1.3: Compile**
+```bash
+cd packages/circuits
+nargo compile
+# Should produce target/main.json
+```
 
 ---
 
-### Person 2: Backend + DevOps
-**Location**: `backend/` (separate from Scaffold)
+### Phase 2: Generate Solidity Verifier (Hour 2-3)
 
-**Hours 0-2: Setup**
-- [ ] Create Express app
-- [ ] Set up Redis locally
-- [ ] Configure Resend account
-- [ ] Test email sending
+**Step 2.1: Install Barretenberg**
+```bash
+# If not installed
+curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/master/barretenberg/cpp/installation/install | bash
+```
 
-**Hours 2-6: API Development**
-- [ ] `POST /verify/email` (send OTP)
-- [ ] `POST /verify/otp` (verify + sign)
-- [ ] Domain allowlist logic
-- [ ] Error handling
+**Step 2.2: Generate Verifier**
+```bash
+cd packages/circuits
+bb write_vk -b ./target/main.json -o ./target --oracle_hash keccak
+bb write_solidity_verifier -k ./target/vk -o ../../zeroklue-app/packages/foundry/contracts/Verifier.sol
+```
 
-**Hours 6-10: Crypto Implementation**
-- [ ] Research EdDSA signing with @noble/curves
-- [ ] Implement signature generation
-- [ ] Generate issuer keypair
-- [ ] Test signature format
-
-**Hours 10-14: Integration Testing**
-- [ ] Create test credentials
-- [ ] Share with Person 3 (circuits)
-- [ ] Debug signature mismatches
-- [ ] Document API usage
-
-**Hours 14-18: Deployment**
-- [ ] Deploy to Railway/Render
-- [ ] Set up environment variables
-- [ ] Test from production URL
-- [ ] Monitor logs
-
-**Hours 18-22.5: Support + Debug**
-- [ ] Help Person 1 with API integration
-- [ ] Fix any backend bugs
-- [ ] Add logging for demo
-- [ ] Backup plan if email fails
+**Expected Output**: ~3000 line Solidity file with `verify(bytes calldata proof, bytes32[] calldata publicInputs)` function.
 
 ---
 
-### Person 3: Circuits + Crypto
-**Location**: `backend/lib/noir/` (circuits live here)
+### Phase 3: ZeroKlue.sol Contract (Hour 3-5)
 
-**Hours 0-3: Circuit Design**
-- [ ] Study Anon-Aadhaar circuit structure
-- [ ] Design our simpler EdDSA circuit
-- [ ] Install Noir dependencies
-- [ ] Set up Nargo project
+**Step 3.1: Write Contract**
 
-**Hours 3-7: Circuit Implementation**
-- [ ] Write main.nr with signature verification
-- [ ] Add nullifier logic
-- [ ] Create test Prover.toml
-- [ ] Test with `nargo prove`
-
-**Hours 7-11: Debugging**
-- [ ] Fix circuit errors (this WILL take time)
-- [ ] Coordinate with Person 2 on signature format
-- [ ] Generate test vectors
-- [ ] Verify proofs work
-
-**Hours 11-15: Frontend Integration**
-- [ ] Copy circuit artifacts to Next.js public folder
-- [ ] Help Person 1 with NoirJS setup
-- [ ] Test proof generation in browser
-- [ ] Optimize for speed
-
-**Hours 15-18: Verifier Generation**
-- [ ] Generate Solidity verifier
-- [ ] Give to Person 4
-- [ ] Test verifier independently
-- [ ] Document public inputs order
-
-**Hours 18-22.5: Testing + Documentation**
-- [ ] End-to-end proof verification
-- [ ] Create test credentials for team
-- [ ] Write circuit documentation
-- [ ] Backup: pre-generate proof if demo breaks
-
----
-
-### Person 4: Smart Contracts
-**Location**: `zeroklue-app/packages/foundry/contracts/`
-
-**Hours 0-3: Contract Design**
-- [ ] Study Scaffold-ETH example contracts
-- [ ] Design ZeroKlue.sol interface
-- [ ] Plan storage structure
-- [ ] Write pseudocode
-
-**Hours 3-7: Contract Implementation**
 ```solidity
-contract ZeroKlue {
-    struct StudentVerification {
-        uint256 verifiedAt;
-        uint256 nullifier;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Verifier.sol";
+
+contract ZeroKlue is ERC721, Ownable {
+    // The ZK proof verifier (generated from Noir circuit)
+    UltraVerifier public immutable verifier;
+    
+    // Nullifiers prevent double-minting
+    mapping(bytes32 => bool) public usedNullifiers;
+    
+    // Token metadata
+    mapping(uint256 => bytes32) public tokenDomainHash;
+    mapping(uint256 => uint256) public tokenVerifiedAt;
+    
+    uint256 private _tokenIdCounter;
+    
+    // Events
+    event StudentVerified(
+        address indexed student,
+        bytes32 indexed domainHash,
+        bytes32 indexed nullifier,
+        uint256 tokenId
+    );
+    
+    constructor(address _verifier) 
+        ERC721("ZeroKlue Student Pass", "ZKSP") 
+        Ownable(msg.sender)
+    {
+        verifier = UltraVerifier(_verifier);
     }
     
-    mapping(address => StudentVerification) public verifications;
-    mapping(uint256 => bool) public usedNullifiers;
-    
+    /**
+     * @notice Verify a ZK proof and mint a soulbound NFT
+     * @param proof The ZK proof bytes
+     * @param publicInputs Array of public inputs [domainHash, nullifier, ...]
+     */
     function verifyAndMint(
-        uint256[8] calldata proof,
-        uint256[4] calldata publicInputs
+        bytes calldata proof,
+        bytes32[] calldata publicInputs
     ) external {
-        // 1. Verify ZK proof
-        // 2. Check nullifier not used
-        // 3. Store verification with timestamp
-        // 4. Emit event
+        require(publicInputs.length >= 2, "Invalid public inputs");
+        
+        bytes32 domainHash = publicInputs[0];
+        bytes32 nullifier = publicInputs[1];
+        
+        // 1. Check nullifier not already used
+        require(!usedNullifiers[nullifier], "Already verified");
+        
+        // 2. Verify the ZK proof
+        require(verifier.verify(proof, publicInputs), "Invalid proof");
+        
+        // 3. Mark nullifier as used
+        usedNullifiers[nullifier] = true;
+        
+        // 4. Mint soulbound NFT
+        uint256 tokenId = _tokenIdCounter++;
+        _safeMint(msg.sender, tokenId);
+        
+        // 5. Store metadata
+        tokenDomainHash[tokenId] = domainHash;
+        tokenVerifiedAt[tokenId] = block.timestamp;
+        
+        emit StudentVerified(msg.sender, domainHash, nullifier, tokenId);
     }
     
-    function isRecentlyVerified(address student, uint256 maxAge) 
-        external view returns (bool) {
-        // Check timestamp
+    /**
+     * @notice Override to make NFT soulbound (non-transferable)
+     */
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal override returns (address) {
+        address from = _ownerOf(tokenId);
+        
+        // Allow minting (from == address(0)), block transfers
+        if (from != address(0) && to != address(0)) {
+            revert("ZeroKlue: Soulbound NFT cannot be transferred");
+        }
+        
+        return super._update(to, tokenId, auth);
+    }
+    
+    /**
+     * @notice Check if address has a valid student verification
+     */
+    function isVerifiedStudent(address user) external view returns (bool) {
+        return balanceOf(user) > 0;
+    }
+    
+    /**
+     * @notice Check if verification is within a time window
+     * @param user Address to check
+     * @param maxAge Maximum age in seconds (e.g., 365 days = 31536000)
+     */
+    function isRecentlyVerified(
+        address user, 
+        uint256 maxAge
+    ) external view returns (bool) {
+        if (balanceOf(user) == 0) return false;
+        
+        // Get user's first token (simplified - assumes one per user)
+        uint256 tokenId = tokenOfOwnerByIndex(user, 0);
+        uint256 verifiedAt = tokenVerifiedAt[tokenId];
+        
+        return (block.timestamp - verifiedAt) <= maxAge;
+    }
+    
+    /**
+     * @notice Get domain hash for a token
+     */
+    function getDomainHash(uint256 tokenId) external view returns (bytes32) {
+        require(_ownerOf(tokenId) != address(0), "Token does not exist");
+        return tokenDomainHash[tokenId];
     }
 }
 ```
 
-**Hours 7-11: Testing**
-- [ ] Write Foundry tests
-- [ ] Test with mock proofs
-- [ ] Test nullifier prevention
-- [ ] Test timestamp logic
+**Step 3.2: Write Tests**
 
-**Hours 11-15: Verifier Integration**
-- [ ] Get Solidity verifier from Person 3
-- [ ] Integrate verifier into contract
-- [ ] Test with real proofs
-- [ ] Debug integration issues
-
-**Hours 15-18: Deployment**
-- [ ] Deploy to Holesky testnet
-- [ ] Verify on Etherscan
-- [ ] Test from frontend
-- [ ] Get testnet ETH from faucet
-
-**Hours 18-22.5: Merchant Demo Support**
-- [ ] Create simple merchant contract/logic
-- [ ] Help Person 1 with NFT checking
-- [ ] Test discount logic
-- [ ] Document for demo
-
----
-
-## Critical Dependencies (Must Coordinate!)
-
-### ⚠️ Person 2 → Person 3
-**Blocker**: Circuit needs exact signature format from backend
-
-**Solution**:
-1. Person 2 generates keypair FIRST (Hour 6)
-2. Person 2 creates test signature (Hour 7)
-3. Person 3 tests circuit with this signature (Hour 8)
-4. Debug together if mismatch (Hour 9-10)
-
-### ⚠️ Person 3 → Person 4
-**Blocker**: Contract needs Solidity verifier from circuit
-
-**Solution**:
-1. Person 3 generates verifier by Hour 15
-2. Person 4 uses mock verifier until then
-3. Swap in real verifier (Hour 15-16)
-4. Test together (Hour 16-17)
-
-### ⚠️ Person 4 → Person 1
-**Blocker**: Frontend needs deployed contract address
-
-**Solution**:
-1. Person 4 deploys to testnet by Hour 15
-2. Person 1 uses mock/local until then
-3. Update contract address in frontend config
-4. Test E2E (Hour 16-18)
-
-### ⚠️ Person 1 → Everyone
-**Blocker**: Frontend integration requires all pieces
-
-**Solution**:
-1. Person 1 builds UI with mocks first (Hour 2-10)
-2. Integrate backend (Hour 10-12)
-3. Integrate circuits (Hour 12-14)
-4. Integrate contracts (Hour 14-16)
-5. E2E testing (Hour 16-20)
-
----
-
-## Realistic Scope Reduction
-
-### 🎯 MUST HAVE (Core Demo)
-
-1. ✅ Email verification with OTP
-2. ✅ EdDSA credential signing
-3. ✅ Noir circuit (even if slow)
-4. ✅ Smart contract with timestamp
-5. ✅ Frontend flow (email → proof → mint)
-6. ✅ Merchant demo (check NFT age)
-
-### 🌟 NICE TO HAVE (If Time Permits)
-
-1. ⏰ Beautiful animations
-2. ⏰ Multiple university domains
-3. ⏰ Gas optimization
-4. ⏰ Mobile responsive
-5. ⏰ Error recovery
-
-### ❌ CUT FROM SCOPE
-
-1. ❌ Multiple merchants in marketplace
-2. ❌ Real ZK email verification (use OTP)
-3. ❌ Mainnet deployment
-4. ❌ Audit-ready code
-5. ❌ Decentralized issuer
-
----
-
-## Emergency Fallback Plan
-
-### If Circuits Break (Hour 18+)
-
-**Option A**: Pre-generated Proof
-```typescript
-// Use a valid proof generated earlier
-const DEMO_PROOF = "0x1234..."; // From successful test
-const DEMO_PUBLIC_INPUTS = [/* ... */];
-```
-
-**Option B**: Mock Verification
 ```solidity
-// Contract accepts any proof for demo
-function verifyProof(...) internal pure returns (bool) {
-    return true; // DEMO ONLY
+// test/ZeroKlue.t.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "forge-std/Test.sol";
+import "../contracts/ZeroKlue.sol";
+
+contract MockVerifier {
+    bool public shouldVerify = true;
+    
+    function setShouldVerify(bool _should) external {
+        shouldVerify = _should;
+    }
+    
+    function verify(bytes calldata, bytes32[] calldata) external view returns (bool) {
+        return shouldVerify;
+    }
+}
+
+contract ZeroKlueTest is Test {
+    ZeroKlue public nft;
+    MockVerifier public mockVerifier;
+    
+    address public alice = address(0x1);
+    
+    function setUp() public {
+        mockVerifier = new MockVerifier();
+        nft = new ZeroKlue(address(mockVerifier));
+    }
+    
+    function testMintWithValidProof() public {
+        bytes memory proof = hex"1234";
+        bytes32[] memory inputs = new bytes32[](2);
+        inputs[0] = bytes32(uint256(1)); // domainHash
+        inputs[1] = bytes32(uint256(2)); // nullifier
+        
+        vm.prank(alice);
+        nft.verifyAndMint(proof, inputs);
+        
+        assertEq(nft.balanceOf(alice), 1);
+        assertTrue(nft.isVerifiedStudent(alice));
+    }
+    
+    function testCannotDoubleMint() public {
+        bytes memory proof = hex"1234";
+        bytes32[] memory inputs = new bytes32[](2);
+        inputs[0] = bytes32(uint256(1));
+        inputs[1] = bytes32(uint256(2)); // same nullifier
+        
+        vm.prank(alice);
+        nft.verifyAndMint(proof, inputs);
+        
+        vm.prank(alice);
+        vm.expectRevert("Already verified");
+        nft.verifyAndMint(proof, inputs);
+    }
+    
+    function testSoulbound() public {
+        bytes memory proof = hex"1234";
+        bytes32[] memory inputs = new bytes32[](2);
+        inputs[0] = bytes32(uint256(1));
+        inputs[1] = bytes32(uint256(2));
+        
+        vm.prank(alice);
+        nft.verifyAndMint(proof, inputs);
+        
+        vm.prank(alice);
+        vm.expectRevert("ZeroKlue: Soulbound NFT cannot be transferred");
+        nft.transferFrom(alice, address(0x2), 0);
+    }
 }
 ```
 
-### If Backend Breaks (Hour 18+)
+---
 
-**Option A**: Hardcoded OTP
+### Phase 4: Port OAuth & Proof Generation (Hour 3-6)
+
+**Step 4.1: Copy StealthNote Helpers**
+
+```bash
+# OAuth
+cp /tmp/research-zk/stealthnote/app/lib/providers/google-oauth.ts \
+   zeroklue-app/packages/nextjs/lib/
+
+# Circuit helpers
+mkdir -p zeroklue-app/packages/nextjs/lib/circuits
+cp /tmp/research-zk/stealthnote/app/lib/circuits/jwt.ts \
+   zeroklue-app/packages/nextjs/lib/circuits/
+cp /tmp/research-zk/stealthnote/app/lib/circuits/ephemeral-key.ts \
+   zeroklue-app/packages/nextjs/lib/circuits/
+```
+
+**Step 4.2: Install Dependencies**
+
+```bash
+cd zeroklue-app/packages/nextjs
+yarn add @noir-lang/noir_js @aztec/bb.js
+```
+
+**Step 4.3: Create Verification Hook**
+
 ```typescript
-// For demo only
-if (email.endsWith('@iiitkottayam.ac.in')) {
-    otp = '123456'; // Always works
+// hooks/useStudentVerification.ts
+import { useState, useCallback } from 'react';
+import { useAccount, useWriteContract } from 'wagmi';
+import { signInWithGoogle } from '~~/lib/google-oauth';
+import { JWTCircuitHelper } from '~~/lib/circuits/jwt';
+import { generateEphemeralKey } from '~~/lib/circuits/ephemeral-key';
+
+export type VerificationStatus = 
+  | 'idle' 
+  | 'connecting' 
+  | 'authenticating'
+  | 'generating_proof'
+  | 'minting'
+  | 'success'
+  | 'error';
+
+export function useStudentVerification() {
+  const { address } = useAccount();
+  const [status, setStatus] = useState<VerificationStatus>('idle');
+  const [error, setError] = useState<string | null>(null);
+  const { writeContractAsync } = useWriteContract();
+  
+  const verify = useCallback(async () => {
+    if (!address) {
+      setError('Please connect your wallet first');
+      return;
+    }
+    
+    try {
+      setStatus('authenticating');
+      
+      // 1. Generate ephemeral key (binds proof to session)
+      const ephemeralKey = await generateEphemeralKey();
+      
+      // 2. Google OAuth with nonce
+      const idToken = await signInWithGoogle({
+        nonce: ephemeralKey.ephemeralPubkeyHash.toString(),
+      });
+      
+      if (!idToken) {
+        throw new Error('Failed to authenticate with Google');
+      }
+      
+      setStatus('generating_proof');
+      
+      // 3. Generate ZK proof
+      const { proof, publicInputs } = await JWTCircuitHelper.generateProof({
+        idToken,
+        ephemeralKey,
+      });
+      
+      setStatus('minting');
+      
+      // 4. Submit to contract
+      await writeContractAsync({
+        address: ZEROKLUE_ADDRESS, // From deployedContracts
+        abi: ZEROKLUE_ABI,
+        functionName: 'verifyAndMint',
+        args: [proof, publicInputs],
+      });
+      
+      setStatus('success');
+    } catch (e: any) {
+      setError(e.message || 'Verification failed');
+      setStatus('error');
+    }
+  }, [address, writeContractAsync]);
+  
+  return { verify, status, error };
 }
 ```
 
-**Option B**: Skip Email
-```typescript
-// Just sign credentials directly
-// No OTP verification for demo
-```
+---
 
-### If Deployment Breaks (Hour 20+)
+### Phase 5: Frontend Components (Hour 6-12)
 
-**Option A**: Local Demo
-- Run everything locally
-- Screen record
-- Use pre-recorded video
+**See TEAM_PLAN.md for detailed component assignments.**
 
-**Option B**: Deployed Parts
-- Frontend on Vercel (always works)
-- Contract on testnet (always works)
-- Backend local (show in terminal)
+Key components:
+1. `VerifyStudent.tsx` - Main verification flow
+2. `DiscountMarketplace.tsx` - Offer grid
+3. `StudentNFT.tsx` - NFT display card
 
 ---
 
-## Hour-by-Hour Checkpoints
+## Environment Variables
 
-| Hour | Checkpoint | All Hands? |
-|------|-----------|-----------|
-| 0 | Project structure set up | ✅ Yes |
-| 2 | Everyone has their environment working | ✅ Yes |
-| 6 | Backend API working, Circuit design done | No |
-| 10 | Circuit compiles, Frontend UI done | No |
-| 12 | Integration begins | ✅ Yes |
-| 14 | Backend + Circuit working together | No |
-| 16 | E2E flow works once | ✅ Yes |
-| 18 | Deployed to production | ✅ Yes |
-| 20 | Demo-ready, testing | ✅ Yes |
-| 22 | Final polish | ✅ Yes |
-
----
-
-## Key Engineering Insights
-
-### 1. **Scaffold-ETH is CRITICAL**
-- Saves 4-6 hours of setup
-- Battle-tested boilerplate
-- Great UI components out of the box
-
-### 2. **EdDSA > ECDSA for Circuits**
-- 10x fewer constraints
-- Much faster proving
-- BabyJubJub support in Noir
-
-### 3. **Timestamp, Not Expiry**
-- More flexible for merchants
-- NFT never burns (better UX)
-- Each merchant sets own policy
-
-### 4. **Nullifier is Essential**
-- Prevents same email → multiple wallets
-- Simple: `hash(email)`
-- Contract tracks used nullifiers
-
-### 5. **OTP > ZK Email**
-- ZK email circuits are HUGE (>100K constraints)
-- OTP is "good enough" for hackathon
-- Can upgrade to zkEmail later
-
-### 6. **Pre-Generate Proofs for Demo**
-- Proof generation might fail during demo
-- Have 3-4 pre-made proofs ready
-- Show code, use backup proof
-
----
-
-## Success Metrics (Realistic)
-
-**By Hour 16** (Minimum Viable Demo):
-- ✅ Email → OTP → Credential works
-- ✅ Circuit generates proof (even if slow)
-- ✅ Contract accepts proof and mints NFT
-- ✅ Merchant can check NFT age
-
-**By Hour 20** (Polished Demo):
-- ✅ Beautiful UI
-- ✅ Deployed to testnet
-- ✅ Merchant demo works
-- ✅ No critical bugs
-
-**By Hour 22** (Demo Ready):
-- ✅ Tested 5+ times end-to-end
-- ✅ Backup video recorded
-- ✅ Pitch rehearsed
-- ✅ Q&A prep done
-
----
-
-## Technologies Summary
-
-### Core Stack (Scaffold-ETH)
 ```bash
-✅ Foundry (contracts)
-✅ Next.js 14 (frontend)
-✅ RainbowKit (wallet)
-✅ Tailwind CSS (styling)
-✅ daisyUI (components)
-```
+# zeroklue-app/packages/nextjs/.env.local
 
-### Custom Additions
-```bash
-⚡ Noir 0.38.0 + Barretenberg
-⚡ NoirJS (proof generation)
-⚡ Express.js (backend API)
-⚡ Redis (OTP cache)
-⚡ Resend (email)
-⚡ @noble/curves (EdDSA)
-```
+# Google OAuth (create at console.cloud.google.com)
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
 
-### Infrastructure
-```bash
-🚀 Vercel (frontend)
-🚀 Railway (backend)
-🚀 Holesky (testnet)
+# For localhost development, no additional config needed
+# In production, add authorized domains in Google Console
 ```
 
 ---
 
-## Next Steps RIGHT NOW
+## Deployment Commands
 
-1. **Person 1**: Explore Scaffold-ETH frontend (`zeroklue-app/packages/nextjs`)
-2. **Person 2**: Set up backend (`backend/`) with Redis + Resend
-3. **Person 3**: Study Anon-Aadhaar circuit, plan our circuit
-4. **Person 4**: Read Scaffold-ETH contract examples, design ZeroKlue.sol
+```bash
+# 1. Start local chain
+cd zeroklue-app
+yarn chain
 
-**All**: Meet back in 2 hours to show progress!
+# 2. Deploy contracts (in new terminal)
+yarn deploy
+
+# 3. Start frontend (in new terminal)
+yarn start
+
+# Open http://localhost:3000
+```
 
 ---
 
-**Remember**: Hackathon code doesn't need to be perfect. It needs to DEMO well. 🚀
+## Gas Estimates
+
+| Operation | Estimated Gas | Notes |
+|-----------|---------------|-------|
+| Deploy Verifier | ~3-5M gas | One-time |
+| Deploy ZeroKlue | ~1M gas | One-time |
+| verifyAndMint() | ~300-500K gas | Per user |
+
+On local Anvil chain, gas is free. For mainnet, ~$10-20 at current prices.
+
+---
+
+## Troubleshooting
+
+### Circuit Won't Compile
+```bash
+# Check Noir version
+nargo --version
+# Should be 1.0.0-beta.x
+
+# Update if needed
+noirup
+```
+
+### Verifier Too Large
+If the generated Verifier.sol exceeds contract size limit:
+1. Use `--oracle_hash keccak` flag (already included)
+2. Consider splitting circuit
+3. Use recursive proofs (advanced)
+
+### Google OAuth Errors
+- Ensure CLIENT_ID is correct
+- For localhost, add `http://localhost:3000` to authorized origins
+- Check browser console for CORS errors
+
+---
+
+## References
+
+- [StealthNote Repo](https://github.com/saleel/stealthnote)
+- [noir-jwt Library](https://github.com/saleel/noir-jwt)
+- [Noir Docs](https://noir-lang.org/docs)
+- [Scaffold-ETH 2](https://docs.scaffoldeth.io)

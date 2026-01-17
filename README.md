@@ -1,45 +1,69 @@
-# ZeroKlue: Privacy-Preserving Student Verification on Ethereum
+# ZeroKlue: Trustless Student Verification on Ethereum
 
-> **Verify once. Use everywhere. Stay private.**
+> **Verify once. Prove forever. Stay private.**
 
-ZeroKlue enables students to prove their university status without sharing personal data. Built with zero-knowledge proofs using Noir and deployed on Ethereum.
+ZeroKlue enables students to cryptographically prove their university status without revealing personal data. Built with Noir ZK circuits and verified on-chain via Scaffold-ETH 2.
 
 ## 🎯 What is ZeroKlue?
 
-Students verify their university email → receive a cryptographic credential → generate zero-knowledge proofs → access student discounts across Web3 without revealing identity.
+Sign in with Google → ZK proof generated in browser → Submit to smart contract → Receive soulbound NFT → Access discounts across Web3.
 
-**The Problem**: Current solutions (SheerID, UNiDAYS) collect unnecessary personal data for every verification.
+**The Problem**: Current solutions (SheerID, UNiDAYS) collect unnecessary personal data and require trusting centralized services.
 
-**Our Solution**: Verify once, prove forever—without exposing your identity.
+**Our Solution**: Trustless verification using Google's JWT signatures + zero-knowledge proofs. **No backend. No database. No data collection.**
 
 ## 🏗️ Architecture
 
 ```
-Student → Email Verification → EdDSA Credential → Noir Circuit → ZK Proof → Smart Contract → NFT
+┌─────────────────────────────────────────────────────────────────┐
+│                      BROWSER (CLIENT-SIDE)                       │
+├─────────────────────────────────────────────────────────────────┤
+│  [Wallet]  →  [Google OAuth]  →  [ZK Proof Gen]  →  [Submit TX] │
+│  RainbowKit     Returns JWT       NoirJS (40s)      wagmi/viem  │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    ETHEREUM (ANVIL/SEPOLIA)                      │
+├─────────────────────────────────────────────────────────────────┤
+│  Verifier.sol (generated)  ←→  ZeroKlue.sol (soulbound NFT)     │
+│  • Verifies ZK proof             • Checks nullifier             │
+│  • ~300K gas                     • Mints NFT on success         │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### 3-Layer System
+### Why This Approach?
+- **Trustless**: Google signs the JWT, we verify cryptographically. We never see your email.
+- **Private**: ZK proof reveals only that you're from a valid domain, not which one.
+- **Sybil-resistant**: Nullifier prevents one account minting multiple NFTs.
 
-1. **Issuance Layer**: Verify email domain, issue EdDSA-signed credential
-2. **Proof Layer**: Generate ZK proof of credential ownership
-3. **Verification Layer**: On-chain verification + soulbound NFT minting
-
-## 📦 Monorepo Structure
+## 📦 Repository Structure
 
 ```
-zeroklue/
+codekal/
 ├── packages/
-│   ├── frontend/         # Next.js + RainbowKit UI
-│   ├── backend/          # Express API for email verification
-│   ├── circuits/         # Noir ZK circuits
-│   ├── contracts/        # Solidity smart contracts
-│   └── merchant-demo/    # Example merchant integration
-├── docs/
-│   ├── PITCH.md          # Hackathon pitch
-│   ├── HACKATHON_QA.md   # Q&A prep
-│   ├── PRD.md            # Product requirements
-│   └── TEAM_PLAN.md      # Development roadmap
-└── README.md
+│   └── circuits/              # Noir ZK circuits (ported from StealthNote)
+│       ├── Nargo.toml         # noir-jwt dependency
+│       └── src/main.nr        # JWT verification circuit
+│
+├── zeroklue-app/              # Scaffold-ETH 2 app
+│   └── packages/
+│       ├── foundry/           # Smart contracts
+│       │   └── contracts/
+│       │       ├── Verifier.sol      # Auto-generated
+│       │       └── ZeroKlue.sol      # NFT + verification
+│       └── nextjs/            # Frontend
+│           ├── lib/
+│           │   ├── google-oauth.ts
+│           │   └── circuits/jwt.ts
+│           └── components/
+│               ├── VerifyStudent.tsx
+│               └── DiscountMarketplace.tsx
+│
+├── PRD.md                     # Product requirements
+├── TEAM_PLAN.md               # Task division
+├── ENGINEERING_PLAN.md        # Technical implementation
+└── TECHNICAL_DECISIONS.md     # Architecture decisions
 ```
 
 ## 🚀 Quick Start
@@ -47,223 +71,119 @@ zeroklue/
 ### Prerequisites
 
 - Node.js 18+
-- Rust & Cargo (for Noir)
-- [Nargo](https://noir-lang.org/docs/getting_started/installation/) (Noir CLI)
+- [Nargo 1.0.0-beta](https://noir-lang.org/docs/getting_started/installation/) 
+- [Foundry](https://book.getfoundry.sh/getting-started/installation)
+- [Barretenberg](https://github.com/AztecProtocol/aztec-packages/tree/master/barretenberg)
 
 ### Installation
 
 ```bash
 # Clone the repo
-git clone <your-repo-url>
-cd zeroklue
+git clone https://github.com/Prajwal-k-tech/Code-kal.git
+cd Code-kal
 
-# Install root dependencies
-npm install
+# Install dependencies
+yarn install
 
-# Install all package dependencies
-npm run install:all
-```
-
-### Development
-
-```bash
-# Start all services (frontend, backend, local blockchain)
-npm run dev
-
-# Or start individually:
-npm run dev:frontend   # Next.js on :3000
-npm run dev:backend    # Express on :4000
-npm run dev:contracts  # Hardhat node on :8545
-```
-
-### Build
-
-```bash
-# Compile circuits
+# Compile the circuit
 cd packages/circuits
 nargo compile
 
-# Generate Solidity verifier
-cd ../contracts
-npx hardhat compile
+# Start local chain (Terminal 1)
+cd zeroklue-app
+yarn chain
 
-# Build frontend
-cd ../frontend
-npm run build
+# Deploy contracts (Terminal 2)
+yarn deploy
+
+# Start frontend (Terminal 3)
+yarn start
 ```
+
+### Demo Flow
+
+1. Open http://localhost:3000
+2. Connect wallet (MetaMask)
+3. Click "Verify Student Status"
+4. Sign in with Google (@university.edu)
+5. Wait for ZK proof generation (~30 seconds)
+6. Confirm transaction
+7. 🎉 Soulbound NFT minted!
 
 ## 🧪 Testing
 
 ```bash
-# Test backend API
-cd packages/backend
-npm test
-
-# Test smart contracts
-cd packages/contracts
-npx hardhat test
-
 # Test Noir circuit
 cd packages/circuits
 nargo test
+
+# Test smart contracts
+cd zeroklue-app/packages/foundry
+forge test -vvv
 ```
 
-## 🌐 Deployment
+## 📋 Documentation
 
-### Backend (Railway)
-
-```bash
-cd packages/backend
-railway init
-railway up
-```
-
-### Frontend (Vercel)
-
-```bash
-cd packages/frontend
-vercel --prod
-```
-
-### Contracts (Holesky Testnet)
-
-```bash
-cd packages/contracts
-npx hardhat run scripts/deploy.ts --network holesky
-npx hardhat verify --network holesky <CONTRACT_ADDRESS>
-```
+| Document | Description |
+|----------|-------------|
+| [PRD.md](PRD.md) | Product requirements & user stories |
+| [TEAM_PLAN.md](TEAM_PLAN.md) | Task division & timeline |
+| [ENGINEERING_PLAN.md](ENGINEERING_PLAN.md) | Technical implementation details |
+| [TECHNICAL_DECISIONS.md](TECHNICAL_DECISIONS.md) | Architecture decisions & rationale |
+| [RESEARCH_FINDINGS.md](RESEARCH_FINDINGS.md) | StealthNote analysis |
 
 ## 📚 Key Technologies
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| ZK Circuits | Noir 0.38.0 | Signature verification + nullifier |
-| Proving Backend | Barretenberg | UltraPlonk prover |
-| Smart Contracts | Solidity 0.8.20 | On-chain verification + NFT |
-| Frontend | Next.js 14 | User interface |
-| Wallet | RainbowKit + wagmi | Ethereum wallet connection |
-| Backend | Express + Redis | Email OTP + credential signing |
-| Crypto | @noble/curves | EdDSA signing (BabyJubJub) |
+| ZK Circuits | Noir 1.0.0-beta | JWT signature verification |
+| JWT Library | noir-jwt v0.4.4 | RSA-SHA256 in ZK circuit |
+| Proving Backend | Barretenberg (UltraHonk) | Fast verification on-chain |
+| Smart Contracts | Solidity 0.8.20 (Foundry) | On-chain verification + NFT |
+| Frontend | Next.js 15 (Scaffold-ETH 2) | User interface |
+| Wallet | RainbowKit + wagmi + viem | Ethereum wallet connection |
+| OAuth | Google OAuth 2.0 | JWT token acquisition |
 
 ## 🔑 Environment Variables
 
-### Backend (`packages/backend/.env`)
+### Frontend (`zeroklue-app/packages/nextjs/.env.local`)
 
 ```env
-PORT=4000
-REDIS_URL=redis://localhost:6379
-RESEND_API_KEY=your_resend_key
-ISSUER_PRIVATE_KEY=your_eddsa_private_key
-ALLOWED_DOMAINS=iiitkottayam.ac.in,iitb.ac.in,iisc.ac.in
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 ```
 
-### Frontend (`packages/frontend/.env.local`)
-
-```env
-NEXT_PUBLIC_BACKEND_URL=http://localhost:4000
-NEXT_PUBLIC_CONTRACT_ADDRESS=0x...
-NEXT_PUBLIC_CHAIN_ID=17000
-```
-
-### Contracts (`packages/contracts/.env`)
-
-```env
-HOLESKY_RPC_URL=https://rpc.holesky.io
-PRIVATE_KEY=your_deployer_private_key
-ETHERSCAN_API_KEY=your_etherscan_key
-```
-
-## 👥 Team Allocation (22.5 Hours)
-
-See [TEAM_PLAN.md](docs/TEAM_PLAN.md) for detailed hour-by-hour breakdown.
-
-- **Person 1**: Frontend (UI/UX, wallet integration, proof generation)
-- **Person 2**: Backend (API, email verification, credential signing, deployment)
-- **Person 3**: Circuits (Noir code, signature verification, nullifier logic)
-- **Person 4**: Contracts (Solidity, deployment, integration testing)
+> **No backend needed!** Fully client-side architecture.
 
 ## 🎓 How It Works
 
 ### For Students
 
-1. **Verify Email**: Enter your university email (e.g., `user@iiitkottayam.ac.in`)
-2. **Enter OTP**: Receive and enter 6-digit OTP
-3. **Get Credential**: Backend signs your wallet address with EdDSA
-4. **Generate Proof**: Click "Unlock Student Pass" → browser generates ZK proof (~5s)
-5. **Mint NFT**: Submit proof to smart contract → receive soulbound student NFT
-6. **Use Everywhere**: Any merchant can check your NFT for student verification
+1. **Connect Wallet**: Connect MetaMask or any EVM wallet
+2. **Google Sign-In**: Click "Verify Student Status" → Sign in with @university.edu
+3. **Proof Generation**: Browser generates ZK proof (~30s) proving valid Google JWT
+4. **Submit Proof**: Send proof to smart contract
+5. **Receive NFT**: Soulbound student pass minted to your wallet
 
-### For Merchants
+### For Partners
 
 ```solidity
-// Check if address is verified student
-bool isStudent = ZeroKlueStudentPass.balanceOf(userAddress) > 0;
-
-if (isStudent) {
-    price = studentPrice; // 50% off
-} else {
-    price = regularPrice;
-}
+bool isStudent = ZeroKlue.balanceOf(userAddress) > 0;
+bytes32 domainHash = ZeroKlue.getDomainHash(tokenId);
 ```
 
 ## 🔒 Privacy Guarantees
 
-- **Zero-Knowledge**: Merchants never see your email, university, or name
-- **Sybil Resistant**: Nullifier prevents verifying multiple wallets with same email
-- **Soulbound**: NFT cannot be transferred (tied to your wallet forever)
-- **Minimal Data**: Backend only stores OTP for 10 minutes, then deletes
-
-## 📊 Performance
-
-- **Circuit Size**: ~10-15K constraints (vs Anon-Aadhaar's 237K)
-- **Proving Time**: <5 seconds on modern laptop
-- **Verification Time**: <0.05 seconds on-chain
-- **Gas Cost**: ~$0.01 on Ethereum L2s
-
-## 🎤 Pitch & Documentation
-
-- [PITCH.md](docs/PITCH.md) - 2-minute pitch, elevator pitch, technical pitch
-- [HACKATHON_QA.md](docs/HACKATHON_QA.md) - Competitor analysis, Q&A prep
-- [PRD.md](docs/PRD.md) - Complete product requirements
-- [TEAM_PLAN.md](docs/TEAM_PLAN.md) - 4-person, 22.5-hour development plan
-
-## 🤝 Contributing
-
-We're a hackathon project, but contributions welcome!
-
-1. Fork the repo
-2. Create a feature branch: `git checkout -b feature/amazing`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing`
-5. Open a Pull Request
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details
+- **Trustless**: Google signs JWT, we never see credentials
+- **Zero-Knowledge**: Partners never see email/name/university
+- **Sybil Resistant**: Nullifier prevents multiple NFTs per account
+- **Soulbound**: NFT cannot be transferred
 
 ## 🙏 Acknowledgments
 
-- [Anon-Aadhaar](https://github.com/anon-aadhaar/anon-aadhaar-noir) - Inspired our ZK architecture
-- [Noir Language](https://noir-lang.org/) - Incredible ZK DSL
-- [Privacy & Scaling Explorations](https://pse.dev/) - ZK research and tools
-
-## 🚨 Hackathon Notes
-
-This is a hackathon MVP built in 22.5 hours. Known limitations:
-
-- Email verification is domain-based (not integrated with university registrars)
-- EdDSA circuit is NOT audited (educational purposes only)
-- Backend is centralized (issuer should be decentralized)
-- Testnet only (Holesky)
-
-## 📞 Contact
-
-Built for [Hackathon Name] by Team ZeroKlue
-
-- Demo: https://zeroklue.vercel.app
-- Pitch Deck: [Link]
-- Video Demo: [Link]
+- [StealthNote](https://github.com/saleel/stealthnote) - Circuit architecture
+- [noir-jwt](https://github.com/saleel/noir-jwt) - JWT verification
+- [Scaffold-ETH 2](https://scaffoldeth.io) - Frontend framework
 
 ---
 
-**Verify once. Use everywhere. Stay private.** 🚀
+**Verify once. Prove forever. Stay private.** 🚀
