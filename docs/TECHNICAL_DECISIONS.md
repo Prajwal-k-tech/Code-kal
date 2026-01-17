@@ -186,39 +186,42 @@ const matches = expectedHash === tokenDomainHash;
 
 ---
 
-## Decision 6: Nullifier for Sybil Resistance
+## Decision 6: Ephemeral Public Key for Sybil Resistance
 
 ### Context
-Users shouldn't be able to mint multiple NFTs from the same Google account.
+Users shouldn't be able to use the same proof multiple times, but we also want to allow privacy rotation (re-verification with new keys).
 
-### Approach
-A **nullifier** is derived from:
-- User's unique identifier (email or sub)
-- A secret (ephemeral key)
+### Approach (StealthNote Design)
+An **ephemeral public key** is generated per verification:
+- User generates a random ed25519 keypair
+- Public key is committed to in the proof
+- Same ephemeral key cannot be used twice on-chain
 
-The nullifier can be verified without revealing the email.
+This differs from traditional nullifiers because:
+- Users CAN re-verify with a new ephemeral key (privacy rotation)
+- We prevent the same proof from being replayed
 
 ### Implementation
 ```noir
-// In circuit
-let nullifier = hash([jwt.sub, ephemeral_secret]);
-// nullifier is public output
+// In StealthNote circuit (public outputs)
+ephemeral_pubkey: Field,           // User's ephemeral public key
+ephemeral_pubkey_expiry: Field,    // When the key expires (circuit enforces this)
 ```
 
 ```solidity
-// In contract
-mapping(bytes32 => bool) public usedNullifiers;
+// In ZeroKlue contract
+mapping(bytes32 => bool) public usedEphemeralKeys;
 
-function verifyAndMint(...) {
-    bytes32 nullifier = publicInputs[1];
-    require(!usedNullifiers[nullifier], "Already verified");
-    usedNullifiers[nullifier] = true;
+function verifyAndMint(bytes calldata proof, bytes32[] calldata publicInputs) external {
+    bytes32 ephemeralPubkey = publicInputs[83]; // Index 83 in StealthNote layout
+    require(!usedEphemeralKeys[ephemeralPubkey], "Ephemeral key already used");
+    usedEphemeralKeys[ephemeralPubkey] = true;
     // ...
 }
 ```
 
 ### Trade-off
-If a user wants to verify from a new wallet, they'd need a new Google account. This is intentional - one verification per Google account.
+A user can re-verify from the same Google account with a new ephemeral key. This updates their verification timestamp but doesn't increase totalVerified count (prevents gaming).
 
 ---
 
@@ -331,7 +334,7 @@ Scope to Google Workspace only. Covers 80%+ of universities.
 | Token | Soulbound NFT | Prevents resale |
 | Network | Anvil first | Speed, free |
 | Domain privacy | Hash as public | Verifiable + private |
-| Sybil resistance | Nullifier | One per Google account |
+| Sybil resistance | Ephemeral pubkey | One proof per key, allows re-verification |
 | Proof generation | Client-side | Privacy |
 | JWT library | noir-jwt | Proven, maintained |
 | Proof system | UltraHonk | Lower gas |
@@ -346,8 +349,8 @@ Scope to Google Workspace only. Covers 80%+ of universities.
    - Complex: Requires oracle for graduation status
 
 2. **Multiple wallets**: What if student wants to verify on new wallet?
-   - Current: Not supported (nullifier prevents)
-   - Future: Could add wallet rotation mechanism
+   - Supported: Student can re-verify with new ephemeral key on any wallet
+   - Each wallet gets its own verification record
 
 3. **Partner integration**: How do partners verify domain hash?
    - MVP: Off-chain, we provide lookup

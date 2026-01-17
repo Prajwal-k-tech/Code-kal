@@ -49,9 +49,10 @@ export const OfferStack = ({ offers, isUnlocked }: OfferStackProps) => {
           const col = index % colCount;
           const row = Math.floor(index / colCount);
           
-          // Grid offsets - minimal gap (just below header)
-          const gridX = (col - 1) * 320; 
-          const gridY = row * 400 + 50; // Shift down just 50px
+          // Grid offsets - moved DOWN significantly (y + 400)
+          // Increased spacing for larger cards
+          const gridX = (col - 1) * 380; // Wider gap for w-80 cards
+          const gridY = row * 500 + 100; // Taller gap for h-[450px] cards
           const gridRotate = 0;
 
           const isHovered = hoveredCardIndex === index;
@@ -70,7 +71,7 @@ export const OfferStack = ({ offers, isUnlocked }: OfferStackProps) => {
               y: gridY,
               rotate: gridRotate,
               scale: 1,
-              zIndex: index, // Maintain order, z-index matters less in grid
+              zIndex: index, 
               transition: { type: "spring", stiffness: 60, damping: 15, delay: index * 0.05 }
             }
           };
@@ -93,13 +94,21 @@ export const OfferStack = ({ offers, isUnlocked }: OfferStackProps) => {
               onMouseEnter={() => setHoveredCardIndex(index)}
               onMouseLeave={() => setHoveredCardIndex(null)}
             >
-               <div className="w-64 h-80 transition-shadow duration-300">
+               {/* Dynamic Card Size: w-64 (fan) vs w-80 (grid) */}
+               <motion.div 
+                 className="shadow-2xl transition-all duration-500"
+                 style={{ willChange: "transform, width, height" }} // Optimization hint
+                 animate={{
+                    width: layoutState === "fanned" ? 256 : 340, // w-64 vs w-[340px]
+                    height: layoutState === "fanned" ? 320 : 450, // h-80 vs h-[450px]
+                 }}
+               >
                  <OfferCard 
                     offer={offer} 
                     isUnlocked={isUnlocked} 
                     minimal={layoutState === "fanned"} 
                  />
-               </div>
+               </motion.div>
             </motion.div>
           );
         })}

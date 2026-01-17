@@ -29,7 +29,11 @@ export const OfferCard = ({ offer, isUnlocked, minimal = false }: OfferCardProps
       <div className="relative h-full flex flex-col p-6 text-white z-10 justify-between">
         {/* Header */}
         <div className="flex justify-between items-start">
-           <span className="text-4xl filter drop-shadow-md">{offer.logo}</span>
+           <img 
+             src={offer.logo} 
+             alt={`${offer.partnerName} logo`} 
+             className="w-16 h-16 object-contain filter drop-shadow-md bg-white/10 rounded-xl p-2 backdrop-blur-sm"
+           />
            {!minimal && (
              <div className="badge bg-black/20 border-0 text-white backdrop-blur-md">
                {offer.category}
@@ -59,7 +63,10 @@ export const OfferCard = ({ offer, isUnlocked, minimal = false }: OfferCardProps
         {!minimal && (
            <div className="mt-4">
              {isUnlocked ? (
-               <button className="btn btn-sm glass w-full text-white hover:text-white">Claim</button>
+               <button className="btn btn-sm bg-white text-black border-none w-full hover:bg-gray-100 hover:scale-[1.02] transition-all shadow-lg font-bold flex items-center justify-center gap-2 group">
+                 Claim Reward 
+                 <span className="group-hover:translate-x-1 transition-transform">➜</span>
+               </button>
              ) : (
                <div className="flex items-center gap-2 text-white/70 text-sm font-bold">
                  🔒 Locked
