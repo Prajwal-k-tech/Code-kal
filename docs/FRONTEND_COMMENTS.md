@@ -58,9 +58,11 @@ const proof = await JWTCircuitHelper.generateProof({
 });
 
 // proof.proofHex - the proof bytes
-// proof.publicInputs - the 85 public inputs
-// proof.nullifier - for duplicate checking
+// proof.publicInputs - the 85 public inputs (bytes32[])
+// proof.ephemeralPubkey - used for sybil resistance (NOT a nullifier!)
 ```
+
+**Important Note:** The StealthNote circuit uses `ephemeral_pubkey` (not `nullifier`) for sybil resistance. See the updated ZeroKlue.sol contract.
 
 Look at `hooks/useStudentVerification.ts` for the correct implementation.
 

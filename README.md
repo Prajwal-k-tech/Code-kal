@@ -52,7 +52,7 @@ Sign in with Google → ZK proof generated in browser → Submit to smart contra
 │                    ETHEREUM (ANVIL/SEPOLIA)                      │
 ├─────────────────────────────────────────────────────────────────┤
 │  Verifier.sol (generated)  ←→  ZeroKlue.sol (soulbound NFT)     │
-│  • Verifies ZK proof             • Checks nullifier             │
+│  • Verifies ZK proof             • Checks ephemeral key         │
 │  • ~300K gas                     • Mints NFT on success         │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -60,7 +60,7 @@ Sign in with Google → ZK proof generated in browser → Submit to smart contra
 ### Why This Approach?
 - **Trustless**: Google signs the JWT, we verify cryptographically. We never see your email.
 - **Private**: ZK proof reveals only that you're from a valid domain, not which one.
-- **Sybil-resistant**: Nullifier prevents one account minting multiple NFTs.
+- **Sybil-resistant**: Ephemeral public key prevents same key being used twice. Users can re-verify with new keys for privacy rotation.
 
 ## 📦 Repository Structure
 
@@ -145,7 +145,9 @@ All docs are in the [`docs/`](docs/) folder:
 | Document | Description |
 |----------|-------------|
 | [QUICKSTART.md](docs/QUICKSTART.md) | 👈 **Start here** - 5-minute setup |
+| [TECHNICAL_DEEP_DIVE.md](docs/TECHNICAL_DEEP_DIVE.md) | 🔬 **Under the hood** - All technologies & flow explained |
 | [FRONTEND_GUIDE.md](docs/FRONTEND_GUIDE.md) | Frontend dev guide with code examples |
+| [BACKEND_READY.md](docs/BACKEND_READY.md) | Contract API + what's ready |
 | [ROADMAP.md](docs/ROADMAP.md) | What's left to build |
 | [ENGINEERING_PLAN.md](docs/ENGINEERING_PLAN.md) | Technical architecture |
 | [PITCH.md](docs/PITCH.md) | Project pitch for judges |

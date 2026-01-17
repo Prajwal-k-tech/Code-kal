@@ -189,11 +189,14 @@ function verifyAndMint(bytes proof, bytes32[] publicInputs) external
 // Called by merchants to check verification
 function isVerified(address wallet) external view returns (bool)
 
+// Check if verified within time window (e.g., 365 days for "current student")
+function isRecentlyVerified(address wallet, uint256 maxAge) external view returns (bool)
+
 // Get verification details
 function getVerification(address wallet) external view returns (
     uint256 verifiedAt,
-    bytes32 nullifier,
-    bool exists
+    bytes32 ephemeralPubkey,
+    uint256 age
 )
 ```
 
@@ -272,7 +275,9 @@ Import this into MetaMask for testing.
 
 | Document | Purpose |
 |----------|---------|
+| [TECHNICAL_DEEP_DIVE.md](TECHNICAL_DEEP_DIVE.md) | 🔬 **All technologies + flow explained** |
 | [FRONTEND_GUIDE.md](FRONTEND_GUIDE.md) | Detailed frontend instructions |
+| [BACKEND_READY.md](BACKEND_READY.md) | Contract API + what's ready |
 | [ROADMAP.md](ROADMAP.md) | What's left to build |
 | [ENGINEERING_PLAN.md](ENGINEERING_PLAN.md) | Technical architecture |
 | [HACKATHON_QA.md](HACKATHON_QA.md) | Judge Q&A prep |

@@ -17,8 +17,8 @@ export interface ContractProof {
   proofHex: `0x${string}`;
   /** Public inputs as bytes32[] (85 elements) */
   publicInputs: `0x${string}`[];
-  /** The nullifier for duplicate checking */
-  nullifier: `0x${string}`;
+  /** The ephemeral public key for sybil resistance (index 83) */
+  ephemeralPubkey: `0x${string}`;
 }
 
 export const JWTCircuitHelper = {
@@ -106,13 +106,14 @@ export const JWTCircuitHelper = {
       return `0x${input.toString(16).padStart(64, '0')}` as `0x${string}`;
     });
     
-    // The nullifier is the last public input (index 84)
-    const nullifier = formattedInputs[84] || formattedInputs[formattedInputs.length - 1];
+    // The ephemeral public key is at index 83 (see TECHNICAL_DECISIONS.md)
+    // Layout: pubkey_limbs(18) + domain(64) + domain_len(1) + ephemeral_pubkey(1) + expiry(1) = 85
+    const ephemeralPubkey = formattedInputs[83];
 
     return {
       proofHex,
       publicInputs: formattedInputs,
-      nullifier,
+      ephemeralPubkey,
     };
   },
 

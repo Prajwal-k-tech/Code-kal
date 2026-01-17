@@ -103,12 +103,12 @@ Layer 1: Authentication
 Layer 2: Proof Generation (Browser)
 - Noir circuit verifies Google's RSA signature inside ZK proof
 - Proves: "I have a valid JWT from an approved domain"
-- Generates: Unique nullifier (prevents double-verification)
+- Uses ephemeral public key for sybil resistance
 - Hides: Email, name, exact university
 
 Layer 3: On-Chain Verification
 - HonkVerifier contract (auto-generated from Noir circuit)
-- Checks: Proof validity, nullifier uniqueness
+- Checks: Proof validity, ephemeral key uniqueness
 - Records: Verification status in ZeroKlue contract
 - Result: Any contract can query isVerified(wallet) → boolean
 ```
@@ -117,7 +117,7 @@ Layer 3: On-Chain Verification
 Not just privacy theater - enables three key properties:
 1. **Unlinkability**: Merchant A and Merchant B can't correlate the same student
 2. **Selective disclosure**: Prove student status without revealing university
-3. **Nullifier-based sybil resistance**: One verification per Google account, cryptographically enforced
+3. **Ephemeral key sybil resistance**: Same key can't be used twice, but users can re-verify with new keys for privacy rotation
 
 **Why Trustless?**
 - We DON'T sign your credential - Google does

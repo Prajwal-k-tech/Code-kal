@@ -19,6 +19,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@aztec/bb.js@npm:0.82.2":
+  version: 0.82.2
+  resolution: "@aztec/bb.js@npm:0.82.2"
+  dependencies:
+    comlink: ^4.4.1
+    commander: ^12.1.0
+    debug: ^4.3.4
+    fflate: ^0.8.0
+    pako: ^2.1.0
+    tslib: ^2.4.0
+  bin:
+    bb.js: dest/node/main.js
+  checksum: d5c0b7bb1dbe08f0c759c1ab982829d51b89ef3aa43a465b2289dea49f15c54f3dd95b88b14274f7c23e58d2a4aa884cf0dcd5e92215cc6e55127a8a4ef5e4c1
+  languageName: node
+  linkType: hard
+
 "@babel/code-frame@npm:^7.22.13, @babel/code-frame@npm:^7.28.6":
   version: 7.28.6
   resolution: "@babel/code-frame@npm:7.28.6"
@@ -2331,6 +2347,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@noble/ed25519@npm:^2.2.3":
+  version: 2.3.0
+  resolution: "@noble/ed25519@npm:2.3.0"
+  checksum: 0ee00e6ada8b9360750e5813be0f5ab5b7336f9771e1119b78738311fa0a29b0b49826d8a67a7920aa5f96b4a94c1e6a5d1bbfb78e4c74754daf78068c1c0414
+  languageName: node
+  linkType: hard
+
 "@noble/hashes@npm:1.4.0, @noble/hashes@npm:~1.4.0":
   version: 1.4.0
   resolution: "@noble/hashes@npm:1.4.0"
@@ -2352,7 +2375,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/hashes@npm:1.8.0, @noble/hashes@npm:^1.3.1, @noble/hashes@npm:^1.4.0, @noble/hashes@npm:^1.8.0, @noble/hashes@npm:~1.8.0":
+"@noble/hashes@npm:1.8.0, @noble/hashes@npm:^1.3.1, @noble/hashes@npm:^1.4.0, @noble/hashes@npm:^1.7.1, @noble/hashes@npm:^1.8.0, @noble/hashes@npm:~1.8.0":
   version: 1.8.0
   resolution: "@noble/hashes@npm:1.8.0"
   checksum: c94e98b941963676feaba62475b1ccfa8341e3f572adbb3b684ee38b658df44100187fa0ef4220da580b13f8d27e87d5492623c8a02ecc61f23fb9960c7918f5
@@ -2390,6 +2413,41 @@ __metadata:
     "@nodelib/fs.scandir": 2.1.5
     fastq: ^1.6.0
   checksum: 190c643f156d8f8f277bf2a6078af1ffde1fd43f498f187c2db24d35b4b4b5785c02c7dc52e356497b9a1b65b13edc996de08de0b961c32844364da02986dc53
+  languageName: node
+  linkType: hard
+
+"@noir-lang/acvm_js@npm:1.0.0-beta.9-e7fb7f3.nightly":
+  version: 1.0.0-beta.9-e7fb7f3.nightly
+  resolution: "@noir-lang/acvm_js@npm:1.0.0-beta.9-e7fb7f3.nightly"
+  checksum: 338ba27bc34756d4243e8cc9614b33f5dee43a7dba4344c8be2938c8ed8aa1efee7f1ea2f7b69390558ec808b1603d17d25c0d03014c4b82a9669168fafe636b
+  languageName: node
+  linkType: hard
+
+"@noir-lang/noir_js@npm:^1.0.0-beta.3":
+  version: 1.0.0-beta.9-e7fb7f3.nightly
+  resolution: "@noir-lang/noir_js@npm:1.0.0-beta.9-e7fb7f3.nightly"
+  dependencies:
+    "@noir-lang/acvm_js": 1.0.0-beta.9-e7fb7f3.nightly
+    "@noir-lang/noirc_abi": 1.0.0-beta.9-e7fb7f3.nightly
+    "@noir-lang/types": 1.0.0-beta.9-e7fb7f3.nightly
+    pako: ^2.1.0
+  checksum: 3cfc31891467f64bdb5162046a880801174a28046f8565ada37deaf1a59248f1a199cdf0063e3fba03802db41571df8d4964c5560480161d04282d2237061499
+  languageName: node
+  linkType: hard
+
+"@noir-lang/noirc_abi@npm:1.0.0-beta.9-e7fb7f3.nightly":
+  version: 1.0.0-beta.9-e7fb7f3.nightly
+  resolution: "@noir-lang/noirc_abi@npm:1.0.0-beta.9-e7fb7f3.nightly"
+  dependencies:
+    "@noir-lang/types": 1.0.0-beta.9-e7fb7f3.nightly
+  checksum: 0f6250ac5c5223692712047a9cd020872c4f513479ca1fec4e602a12c2abb82d75a8aca9cb89810729e51e656f378163e8834df2ba61928475c1d235a644484f
+  languageName: node
+  linkType: hard
+
+"@noir-lang/types@npm:1.0.0-beta.9-e7fb7f3.nightly":
+  version: 1.0.0-beta.9-e7fb7f3.nightly
+  resolution: "@noir-lang/types@npm:1.0.0-beta.9-e7fb7f3.nightly"
+  checksum: 891adb5bf3251c49a460ab1dd137d67c4a532e9149d4442c9987c7be2017bef1b39f0dc279bfa9edf6f2b4a10e05731b733464490b4e38924ac7ba244b9fe6dc
   languageName: node
   linkType: hard
 
@@ -3159,7 +3217,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@se-2/nextjs@workspace:packages/nextjs"
   dependencies:
+    "@aztec/bb.js": 0.82.2
     "@heroicons/react": ~2.1.5
+    "@noble/ed25519": ^2.2.3
+    "@noble/hashes": ^1.7.1
+    "@noir-lang/noir_js": ^1.0.0-beta.3
     "@paper-design/shaders-react": ^0.0.70
     "@rainbow-me/rainbowkit": 2.2.9
     "@react-native-async-storage/async-storage": ~2.2.0
@@ -3189,6 +3251,7 @@ __metadata:
     next: ~15.2.8
     next-nprogress-bar: ~2.3.13
     next-themes: ~0.3.0
+    noir-jwt: 0.4.5
     postcss: ~8.4.45
     prettier: ~3.5.3
     qrcode.react: ~4.0.1
@@ -6815,6 +6878,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"comlink@npm:^4.4.1":
+  version: 4.4.2
+  resolution: "comlink@npm:4.4.2"
+  checksum: 35313f26fdd78c202be21be49a7607f57e9e91963399b524676742ee0cf7db589be500d923ed0809b53f37996461186fb345bf867d93236be22bfae3cb7bd07e
+  languageName: node
+  linkType: hard
+
 "commander@npm:14.0.2, commander@npm:^14.0.0":
   version: 14.0.2
   resolution: "commander@npm:14.0.2"
@@ -6826,6 +6896,13 @@ __metadata:
   version: 10.0.1
   resolution: "commander@npm:10.0.1"
   checksum: 436901d64a818295803c1996cd856621a74f30b9f9e28a588e726b2b1670665bccd7c1a77007ebf328729f0139838a88a19265858a0fa7a8728c4656796db948
+  languageName: node
+  linkType: hard
+
+"commander@npm:^12.1.0":
+  version: 12.1.0
+  resolution: "commander@npm:12.1.0"
+  checksum: 68e9818b00fc1ed9cdab9eb16905551c2b768a317ae69a5e3c43924c2b20ac9bb65b27e1cab36aeda7b6496376d4da908996ba2c0b5d79463e0fb1e77935d514
   languageName: node
   linkType: hard
 
@@ -8594,6 +8671,13 @@ __metadata:
     picomatch:
       optional: true
   checksum: bd537daa9d3cd53887eed35efa0eab2dbb1ca408790e10e024120e7a36c6e9ae2b33710cb8381e35def01bc9c1d7eaba746f886338413e68ff6ebaee07b9a6e8
+  languageName: node
+  linkType: hard
+
+"fflate@npm:^0.8.0":
+  version: 0.8.2
+  resolution: "fflate@npm:0.8.2"
+  checksum: 29470337b85d3831826758e78f370e15cda3169c5cd4477c9b5eea2402261a74b2975bae816afabe1c15d21d98591e0d30a574f7103aa117bff60756fa3035d4
   languageName: node
   linkType: hard
 
@@ -11758,6 +11842,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"noir-jwt@npm:0.4.5":
+  version: 0.4.5
+  resolution: "noir-jwt@npm:0.4.5"
+  checksum: 3d23dac6063e19a0f085d5e0d2cfe26fa963ee6995828c165697da642b5e1426ce95b29566c2f94ff8742cbe0828ee51d4a525f7f98fcfea722900c1b858b1d0
+  languageName: node
+  linkType: hard
+
 "nopt@npm:^5.0.0":
   version: 5.0.0
   resolution: "nopt@npm:5.0.0"
@@ -12501,6 +12592,13 @@ __metadata:
   bin:
     pacote: bin/index.js
   checksum: 6fc395b579799da4bafa1d1b309df03a0b2540dfb29c312ee17e60afdec872d4da11398fc2be081184c0b73def935bb5ebf57b193623926ec2e502e4b98fe6ea
+  languageName: node
+  linkType: hard
+
+"pako@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "pako@npm:2.1.0"
+  checksum: 71666548644c9a4d056bcaba849ca6fd7242c6cf1af0646d3346f3079a1c7f4a66ffec6f7369ee0dc88f61926c10d6ab05da3e1fca44b83551839e89edd75a3e
   languageName: node
   linkType: hard
 

@@ -24,15 +24,15 @@ contract ZeroKlue is Ownable {
 
     struct StudentVerification {
         uint256 verifiedAt;     // When proof was submitted
-        bytes32 nullifier;      // Prevents duplicate verifications (Poseidon hash of email)
+        bytes32 ephemeralPubkey; // The ephemeral public key used (prevents reuse)
         bool exists;            // Optimization for balanceOf
     }
 
     // Student address => their verification
     mapping(address => StudentVerification) public verifications;
     
-    // Nullifier => used (prevents same credential twice)
-    mapping(bytes32 => bool) public usedNullifiers;
+    // Ephemeral pubkey => used (prevents same key twice)
+    mapping(bytes32 => bool) public usedEphemeralKeys;
     
     // HonkVerifier for ZK proof verification
     IVerifier public immutable verifier;
@@ -41,13 +41,18 @@ contract ZeroKlue is Ownable {
     uint256 public totalVerified;
     
     // Number of public inputs expected from the circuit
+    // Layout: pubkey_limbs(18) + domain(64) + domain_len(1) + ephemeral_pubkey(1) + expiry(1) = 85
     uint256 public constant NUM_PUBLIC_INPUTS = 85;
+    
+    // Public input indices (from StealthNote circuit)
+    uint256 private constant IDX_EPHEMERAL_PUBKEY = 83;
+    uint256 private constant IDX_EPHEMERAL_EXPIRY = 84;
 
     // ============ Events ============
 
     event StudentVerified(
         address indexed student,
-        bytes32 nullifier,
+        bytes32 ephemeralPubkey,
         uint256 timestamp
     );
     
@@ -69,15 +74,16 @@ contract ZeroKlue is Ownable {
      * @param proof The ZK proof bytes from noir_js
      * @param publicInputs Array of 85 public inputs from the circuit
      * 
-     * Public Inputs Layout (from noir-jwt circuit):
-     * [0-2047]: JWT partial hash segments (256 bytes * 8 = 2048 field elements)
-     * ... circuit-specific inputs ...
-     * [82]: domain_hash_lo (lower 128 bits of email domain hash)
-     * [83]: domain_hash_hi (upper 128 bits of email domain hash)
-     * [84]: nullifier (Poseidon hash of email for privacy)
+     * Public Inputs Layout (from StealthNote noir-jwt circuit):
+     * [0-17]:  jwt_pubkey_modulus_limbs (18 x u128) - Google's RSA public key
+     * [18-81]: domain.storage (64 bytes) - The verified domain (e.g., "university.edu")
+     * [82]:    domain.len - Length of the domain string
+     * [83]:    ephemeral_pubkey - User's ephemeral public key (used as unique ID)
+     * [84]:    ephemeral_pubkey_expiry - When the ephemeral key expires
      * 
-     * Note: The wallet address is committed to within the proof itself
-     * via the ephemeral key signing mechanism
+     * Sybil Resistance: We use ephemeral_pubkey as unique identifier.
+     * Same ephemeral key cannot mint twice, but user can generate new key
+     * and re-verify (which is intentional for privacy rotation).
      */
     function verifyAndMint(
         bytes calldata proof,
@@ -85,32 +91,32 @@ contract ZeroKlue is Ownable {
     ) external {
         require(publicInputs.length == NUM_PUBLIC_INPUTS, "Invalid public inputs length");
         
-        // Extract nullifier from public inputs (last element)
-        bytes32 nullifier = publicInputs[84];
+        // Extract ephemeral pubkey from public inputs
+        bytes32 ephemeralPubkey = publicInputs[IDX_EPHEMERAL_PUBKEY];
 
-        // 1. Check nullifier not used (prevents double-verification with same credential)
-        require(!usedNullifiers[nullifier], "Credential already used");
+        // 1. Check ephemeral key not already used
+        require(!usedEphemeralKeys[ephemeralPubkey], "Ephemeral key already used");
 
         // 2. Verify the ZK proof using HonkVerifier
         require(verifier.verify(proof, publicInputs), "Invalid proof");
 
-        // 3. Check if reverifying (same student, different timestamp)
+        // 3. Check if reverifying (same student, different ephemeral key)
         bool isReverification = verifications[msg.sender].exists;
 
         // 4. Store verification with current timestamp
         verifications[msg.sender] = StudentVerification({
             verifiedAt: block.timestamp,
-            nullifier: nullifier,
+            ephemeralPubkey: ephemeralPubkey,
             exists: true
         });
 
-        // 5. Mark nullifier as used
-        usedNullifiers[nullifier] = true;
+        // 5. Mark ephemeral key as used
+        usedEphemeralKeys[ephemeralPubkey] = true;
 
         // 6. Update counter and emit events
         if (!isReverification) {
             totalVerified++;
-            emit StudentVerified(msg.sender, nullifier, block.timestamp);
+            emit StudentVerified(msg.sender, ephemeralPubkey, block.timestamp);
         } else {
             emit StudentReverified(msg.sender, block.timestamp);
         }
@@ -156,19 +162,19 @@ contract ZeroKlue is Ownable {
      * @notice Get full verification details
      * @param student Address to check
      * @return verifiedAt Timestamp of verification
-     * @return nullifier The nullifier hash used
+     * @return ephemeralPubkey The ephemeral public key used (for sybil resistance)
      * @return age How long ago verified (in seconds)
      */
     function getVerification(address student) 
         public 
         view 
-        returns (uint256 verifiedAt, bytes32 nullifier, uint256 age) 
+        returns (uint256 verifiedAt, bytes32 ephemeralPubkey, uint256 age) 
     {
         StudentVerification memory verification = verifications[student];
         require(verification.exists, "Not verified");
         
         verifiedAt = verification.verifiedAt;
-        nullifier = verification.nullifier;
+        ephemeralPubkey = verification.ephemeralPubkey;
         age = block.timestamp - verification.verifiedAt;
     }
 
