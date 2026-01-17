@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./HonkVerifier.sol";
 
 /**
  * @title ZeroKlue Student Verification
  * @notice On-chain student verification using zero-knowledge proofs
- * @dev NFT represents verified student status with timestamp
+ * @dev Verifies JWT proofs using Noir/HonkVerifier for trustless Google OAuth verification
  * 
- * KEY FEATURE: Timestamp-based verification
- * - NFT stores when proof was verified
- * - Merchants can check age of verification
+ * KEY FEATURE: Trustless JWT Verification
+ * - User signs in with Google on their browser
+ * - Browser generates ZK proof that JWT is valid (RSA signature check)
+ * - Proof submitted on-chain, verified by HonkVerifier
+ * - NFT minted with verification timestamp
+ * 
+ * MERCHANT INTEGRATION:
+ * - isRecentlyVerified(user, maxAge) - check if verified within time window
  * - Flexible policies: "current student" vs "was a student"
  */
 contract ZeroKlue is Ownable {
@@ -18,7 +24,7 @@ contract ZeroKlue is Ownable {
 
     struct StudentVerification {
         uint256 verifiedAt;     // When proof was submitted
-        uint256 nullifier;      // Prevents duplicate verifications
+        bytes32 nullifier;      // Prevents duplicate verifications (Poseidon hash of email)
         bool exists;            // Optimization for balanceOf
     }
 
@@ -26,20 +32,22 @@ contract ZeroKlue is Ownable {
     mapping(address => StudentVerification) public verifications;
     
     // Nullifier => used (prevents same credential twice)
-    mapping(uint256 => bool) public usedNullifiers;
+    mapping(bytes32 => bool) public usedNullifiers;
     
-    // Issuer public key (from backend)
-    uint256 public issuerPubKeyX;
-    uint256 public issuerPubKeyY;
+    // HonkVerifier for ZK proof verification
+    IVerifier public immutable verifier;
     
     // Total verified students (for stats)
     uint256 public totalVerified;
+    
+    // Number of public inputs expected from the circuit
+    uint256 public constant NUM_PUBLIC_INPUTS = 85;
 
     // ============ Events ============
 
     event StudentVerified(
         address indexed student,
-        uint256 nullifier,
+        bytes32 nullifier,
         uint256 timestamp
     );
     
@@ -50,57 +58,56 @@ contract ZeroKlue is Ownable {
 
     // ============ Constructor ============
 
-    constructor(uint256 _issuerPubKeyX, uint256 _issuerPubKeyY) Ownable(msg.sender) {
-        issuerPubKeyX = _issuerPubKeyX;
-        issuerPubKeyY = _issuerPubKeyY;
+    constructor(address _verifier) Ownable(msg.sender) {
+        verifier = IVerifier(_verifier);
     }
 
     // ============ Core Functions ============
 
     /**
-     * @notice Verify ZK proof and mint student NFT
-     * @param proof The ZK proof (format depends on verifier)
-     * @param publicInputs [issuerPubKeyX, issuerPubKeyY, nullifier, walletAddress]
+     * @notice Verify ZK proof and mint student verification NFT
+     * @param proof The ZK proof bytes from noir_js
+     * @param publicInputs Array of 85 public inputs from the circuit
      * 
-     * This is called by students after generating their proof
+     * Public Inputs Layout (from noir-jwt circuit):
+     * [0-2047]: JWT partial hash segments (256 bytes * 8 = 2048 field elements)
+     * ... circuit-specific inputs ...
+     * [82]: domain_hash_lo (lower 128 bits of email domain hash)
+     * [83]: domain_hash_hi (upper 128 bits of email domain hash)
+     * [84]: nullifier (Poseidon hash of email for privacy)
+     * 
+     * Note: The wallet address is committed to within the proof itself
+     * via the ephemeral key signing mechanism
      */
     function verifyAndMint(
-        uint256[8] calldata proof,
-        uint256[4] calldata publicInputs
+        bytes calldata proof,
+        bytes32[] calldata publicInputs
     ) external {
-        // Extract public inputs
-        uint256 _issuerPubKeyX = publicInputs[0];
-        uint256 _issuerPubKeyY = publicInputs[1];
-        uint256 nullifier = publicInputs[2];
-        uint256 walletAddress = publicInputs[3];
+        require(publicInputs.length == NUM_PUBLIC_INPUTS, "Invalid public inputs length");
+        
+        // Extract nullifier from public inputs (last element)
+        bytes32 nullifier = publicInputs[84];
 
-        // 1. Check issuer key matches
-        require(_issuerPubKeyX == issuerPubKeyX, "Invalid issuer key X");
-        require(_issuerPubKeyY == issuerPubKeyY, "Invalid issuer key Y");
-
-        // 2. Check wallet address matches sender
-        require(uint256(uint160(msg.sender)) == walletAddress, "Wallet mismatch");
-
-        // 3. Check nullifier not used
+        // 1. Check nullifier not used (prevents double-verification with same credential)
         require(!usedNullifiers[nullifier], "Credential already used");
 
-        // 4. Verify the ZK proof
-        require(verifyProof(proof, publicInputs), "Invalid proof");
+        // 2. Verify the ZK proof using HonkVerifier
+        require(verifier.verify(proof, publicInputs), "Invalid proof");
 
-        // 5. Check if reverifying (same student, different timestamp)
+        // 3. Check if reverifying (same student, different timestamp)
         bool isReverification = verifications[msg.sender].exists;
 
-        // 6. Store verification with current timestamp
+        // 4. Store verification with current timestamp
         verifications[msg.sender] = StudentVerification({
             verifiedAt: block.timestamp,
             nullifier: nullifier,
             exists: true
         });
 
-        // 7. Mark nullifier as used
+        // 5. Mark nullifier as used
         usedNullifiers[nullifier] = true;
 
-        // 8. Update counter
+        // 6. Update counter and emit events
         if (!isReverification) {
             totalVerified++;
             emit StudentVerified(msg.sender, nullifier, block.timestamp);
@@ -149,13 +156,13 @@ contract ZeroKlue is Ownable {
      * @notice Get full verification details
      * @param student Address to check
      * @return verifiedAt Timestamp of verification
-     * @return nullifier The nullifier used
+     * @return nullifier The nullifier hash used
      * @return age How long ago verified (in seconds)
      */
     function getVerification(address student) 
         public 
         view 
-        returns (uint256 verifiedAt, uint256 nullifier, uint256 age) 
+        returns (uint256 verifiedAt, bytes32 nullifier, uint256 age) 
     {
         StudentVerification memory verification = verifications[student];
         require(verification.exists, "Not verified");
@@ -209,18 +216,6 @@ contract ZeroKlue is Ownable {
     // ============ Admin Functions ============
 
     /**
-     * @notice Update issuer public key (only owner)
-     * @dev Use if issuer key is compromised or rotated
-     */
-    function updateIssuerKey(uint256 _issuerPubKeyX, uint256 _issuerPubKeyY) 
-        external 
-        onlyOwner 
-    {
-        issuerPubKeyX = _issuerPubKeyX;
-        issuerPubKeyY = _issuerPubKeyY;
-    }
-
-    /**
      * @notice Emergency revoke verification (only owner)
      * @dev Use if credential was fraudulently obtained
      */
@@ -228,32 +223,6 @@ contract ZeroKlue is Ownable {
         require(verifications[student].exists, "Not verified");
         delete verifications[student];
         totalVerified--;
-    }
-
-    // ============ Proof Verification ============
-
-    /**
-     * @notice Verify the ZK proof using Noir verifier
-     * @dev This will be replaced with actual verifier contract call
-     * 
-     * TODO for Person 4:
-     * 1. Person 3 generates Solidity verifier from Noir circuit
-     * 2. Deploy verifier contract separately
-     * 3. Call verifier.verify(proof, publicInputs) here
-     * 
-     * For now, this is a placeholder that always returns true for testing
-     */
-    function verifyProof(
-        uint256[8] calldata proof,
-        uint256[4] calldata publicInputs
-    ) internal pure returns (bool) {
-        // TODO: Replace with actual verifier call
-        // Example:
-        // return UltraVerifier(verifierAddress).verify(proof, publicInputs);
-        
-        // Placeholder for testing
-        // ⚠️ INSECURE - Remove before production!
-        return proof.length > 0 && publicInputs.length > 0;
     }
 }
 

@@ -1,0 +1,6 @@
+[submodule "zeroklue-app/packages/foundry/lib/openzeppelin-contracts"]
+	path = zeroklue-app/packages/foundry/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
+[submodule "zeroklue-app/packages/foundry/lib/solidity-bytes-utils"]
+	path = zeroklue-app/packages/foundry/lib/solidity-bytes-utils
+	url = https://github.com/GNSPS/solidity-bytes-utils
