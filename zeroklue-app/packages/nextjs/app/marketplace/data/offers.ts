@@ -21,11 +21,11 @@ export const offers: Offer[] = [
   {
     id: "2",
     partnerName: "PixelPerfect",
-    description: "Ultimate Design Suite",
-    discount: "60%",
-    logo: "/pixelperfect.svg",
+    description: "ChainAcademy Design Course",
+    discount: "100% OFF",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
     category: "Software",
-    bgColor: "bg-[#FF3366]",
+    bgColor: "bg-[#0f172a]",
   },
   {
     id: "3",
