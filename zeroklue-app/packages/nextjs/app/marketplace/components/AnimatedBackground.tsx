@@ -14,13 +14,13 @@ export const AnimatedBackground = () => {
 
   return (
     <div className="fixed inset-0 z-[-1] overflow-hidden bg-[#0a0a2e] contain-content">
-      /* 
+      {/* 
         Optimization Strategy:
         1. CSS Animations instead of JS (Framer Motion)
         2. REMOVED expensive `filter: blur()` - relying on gradient for softness
         3. Reduced layer count
         4. Hardware acceleration cues
-      */
+      */}
       <style jsx>{`
         @keyframes float1 {
           0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
