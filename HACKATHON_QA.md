@@ -4,6 +4,78 @@ This document prepares you for every question mentors and judges might ask.
 
 ---
 
+## Beginner-Friendly Q&A (For Non-Technical Judges)
+
+### "What is a blockchain, and why do you need it?"
+
+**Simple Answer**:
+"A blockchain is like a public spreadsheet that everyone can read but no one can cheat on. Once something is written, it can't be erased or changed.
+
+We need it because:
+1. **Trust**: Merchants don't have to trust our company. They trust math.
+2. **Permanence**: Your student verification can't be deleted if our company goes down.
+3. **Openness**: Any app can check your student status without asking our permission."
+
+---
+
+### "What is a zero-knowledge proof? Explain like I'm 5."
+
+**Simple Answer**:
+"Imagine you want to prove you know a secret password, but you don't want to tell anyone the password. A zero-knowledge proof is like a magic trick that lets you prove 'I know the password' without ever saying what the password is.
+
+For us: You prove 'I'm a student at a real university' without revealing which university or what your email is. The merchant learns you're a student, but nothing else."
+
+---
+
+### "Where exactly are these 'proofs'? Can I see one?"
+
+**Simple Answer**:
+"Yes! When you click 'Verify with Google', your browser does math for about 30 seconds. That math creates a small file - about 2 kilobytes - that's the proof.
+
+That proof file gets sent to the blockchain. You can see it on the block explorer. It looks like a long string of numbers and letters. Even though it's public, it reveals nothing about your identity - that's the 'zero-knowledge' magic."
+
+---
+
+### "How do I know you're not secretly storing my email?"
+
+**Simple Answer**:
+"We literally can't. Here's why:
+
+1. You sign in with Google directly - we never see your password
+2. Your browser generates the proof - not our server
+3. The proof only contains a 'nullifier' - a one-way hash of your email
+4. A hash is like a fingerprint - you can't recreate the original from it
+
+Even if we wanted to spy on you, the architecture prevents it. It's privacy by math, not privacy by policy."
+
+---
+
+### "What happens if I lose my wallet?"
+
+**Simple Answer**:
+"Same thing that happens if you lose your keys - you need a backup. In production, we'd add social recovery (trusted friends can help you recover). For this hackathon demo, the answer is: don't lose it, or re-verify with a new wallet."
+
+---
+
+### "Can I sell my student verification to someone else?"
+
+**Simple Answer**:
+"No. It's 'soulbound' - fancy word meaning it can't be transferred. The verification is permanently attached to YOUR wallet. You can't send it to another wallet, sell it on OpenSea, or give it to a friend."
+
+---
+
+### "Why would merchants use this instead of just checking .edu emails?"
+
+**Simple Answer**:
+"Three problems with email checks:
+1. Alumni keep .edu emails forever - not actually students
+2. Staff have university emails - not students either
+3. Merchants store the email - creates data breach liability
+
+With us, merchants learn ONLY that you're verified. No email stored. No lawsuit risk."
+
+---
+
 ## Competitor Analysis
 
 ### SheerID (The 800lb Gorilla)
@@ -122,41 +194,36 @@ Plus, once you need to verify a proof, blockchain gives you a neutral, tamper-pr
 ### "Why would students trust you with their email?"
 
 **Answer**:
-"Great question. We DON'T want you to trust us - that's the point.
+"Great question. We DON'T want you to trust us - that's the whole point.
 
 Here's what happens:
-1. We verify your email via OTP (proves you own it)
-2. We immediately DELETE the email from our servers
-3. We issue a signed credential to YOUR wallet (you control it)
-4. When you generate a proof, it happens in YOUR browser
-5. The proof never reveals your email - even to us
+1. You sign in with Google directly (OAuth popup)
+2. Google gives YOUR BROWSER a signed JWT token
+3. Your browser generates a ZK proof that the JWT is valid
+4. That proof is sent to the blockchain - not to us
+5. We never see your email, your JWT, or anything personal
+
+The key insight: Google is the signer, not us. We're just providing the cryptographic tools to make Google's signature private.
 
 Compare this to SheerID: they store your email, name, DOB indefinitely and share it with every merchant. 
 
-With us, after verification, we literally CAN'T identify you. The nullifier in your proof is a hash - we can't reverse it to find your email. That's cryptographic privacy, not privacy policy."
+With us, we literally can't identify you. We never touched your credentials."
 
 ---
 
 ### "How do you prevent fake email domains?"
 
 **Answer**:
-"We maintain an allowlist of verified university domains. For the hackathon, it's hardcoded:
+"Google Workspace only issues JWTs for verified organization domains. You can't get a JWT claiming you're @stanford.edu unless Stanford has actually set up Google Workspace and given you an account.
 
+Additionally, we maintain an allowlist of approved domains. For the hackathon:
 ```javascript
-const APPROVED_DOMAINS = [
-  'iiitkottayam.ac.in',
-  'iitb.ac.in',
-  'stanford.edu',
-  // ... etc
-];
+const APPROVED_DOMAINS = ['iiitkottayam.ac.in'];
 ```
 
-In production, we'd use:
-1. **Public databases**: GitHub Education's 10,000+ verified domains
-2. **Manual curation**: New universities submit domain for review
-3. **Community governance**: DAO votes on new domain additions
+In production, we'd use curated lists like GitHub Education's 10,000+ verified university domains.
 
-The key insight: we don't verify individual students. We verify DOMAINS. If stanford.edu gives you an email, Stanford already verified you. We're just creating a cryptographic wrapper around that attestation."
+The key insight: Google already verified the domain is real. We just check it's on our approved list."
 
 ---
 
@@ -264,11 +331,28 @@ The key: We're infrastructure. Our margin is cost of proof generation (~$0.001) 
 
 3. **Trust/Brand**: Students will trust one ZK identity platform. Being first with good security builds trust that's hard to displace.
 
-4. **Smart Contract Standard**: If our NFT format becomes the standard that merchants check, we have lock-in similar to how ERC-20 is the token standard.
+4. **Smart Contract Standard**: If our verification format becomes the standard that merchants check, we have lock-in similar to how ERC-20 is the token standard.
 
-5. **University Partnerships**: Once universities integrate ZeroKlue issuers into their SSO, that's a multi-year sales cycle for competitors to replicate.
+But honestly? We're built on StealthNote's open-source circuit. If someone copies us and does it better, that's fine. The WORLD benefits from privacy-preserving identity infrastructure. We just want to be the ones who build it first and best."
 
-But honestly? If someone copies us and does it better, that's fine. The WORLD benefits from privacy-preserving identity infrastructure. We just want to be the ones who build it first and best."
+---
+
+### "What exactly did you take from StealthNote?"
+
+**Answer**:
+"StealthNote is an MIT-licensed project for anonymous corporate messaging. We adapted:
+
+1. **The Noir circuit** (`circuit/src/main.nr`): Verifies Google JWT RSA signatures inside a ZK proof
+2. **The proof generation code** (`lib/circuits/jwt.ts`): JavaScript that calls the circuit and generates proofs
+3. **The OAuth helper** (`lib/providers/google-oauth.ts`): Google sign-in integration
+
+What we built fresh:
+1. **ZeroKlue.sol**: On-chain verification registry with nullifier tracking
+2. **HonkVerifier.sol**: Generated Solidity verifier for the circuit
+3. **Merchant demo**: Shows how third parties can check verification status
+4. **Domain filtering**: Restrict to specific university domains
+
+We're transparent about this. StealthNote is production-tested code that solves the hardest part (ZK JWT verification). We're applying it to a new use case: portable student credentials."
 
 ---
 
@@ -328,24 +412,15 @@ This is cryptographic sybil resistance, not trust-based."
 ### "What if your signing key gets compromised?"
 
 **Answer**:
-"Excellent security question. Three layers of defense:
+"We don't HAVE a signing key - that's the beauty of this architecture.
 
-**Layer 1: Key Security**
-- Private key stored in HSM (Hardware Security Module)
-- Never touches application server
-- Multi-sig required for key rotation
+Google signs the JWT. We just verify their signature inside a ZK proof. Google's key management is their problem (and they're very good at it).
 
-**Layer 2: Key Rotation**
-- Smart contract supports multiple approved issuer keys
-- We rotate keys every 6 months
-- Old credentials remain valid (backward compatible)
+For the nullifier system:
+- Even if someone learned the circuit, they can't fake proofs without valid Google JWTs
+- The only attack is if Google's RSA private key gets compromised, which would be a global security incident affecting all Google services
 
-**Layer 3: Revocation**
-- If key is compromised, we add it to on-chain revocation list
-- Smart contract checks: `if (key in revoked_keys) revert`
-- Old credentials stop working within 1 block
-
-Compare this to centralized systems where a database breach means ALL historical data is exposed forever. With our model, worst case is 6 months of credentials before we detect and rotate."
+This is actually MORE secure than having our own issuer key. We've removed ourselves as a point of failure."
 
 ---
 

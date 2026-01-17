@@ -1,8 +1,49 @@
 # ZeroKlue Team Plan & Task Division
 
-**Version**: 2.0 (StealthNote Fork Approach)  
+**Version**: 2.1 (Final Push)  
 **Team Size**: 3 people  
-**Timeline**: 24 hours
+**Time Remaining**: ~17 hours
+
+---
+
+## Current Status
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Noir circuit (JWT verification) | ✅ Done | Using StealthNote's proven circuit |
+| HonkVerifier.sol | ✅ Done | Generated, 1884 lines |
+| ZeroKlue.sol | ✅ Done | Registry + verification logic |
+| Deploy script | ✅ Ready | Just needs `yarn deploy` |
+| Scaffold-ETH 2 base | ✅ Set up | RainbowKit, wagmi working |
+| Frontend integration | 🔴 TODO | Copy StealthNote libs, wire up |
+| Merchant demo | 🔴 TODO | Simple page checking NFT |
+
+---
+
+## Remaining Work (Prioritized)
+
+### MUST HAVE (Demo-blocking)
+
+| Task | Owner | Time | Priority |
+|------|-------|------|----------|
+| Copy StealthNote frontend libs | Frontend | 30m | P0 |
+| Add domain filter (iiitkottayam.ac.in) | Frontend | 15m | P0 |
+| Create useStudentVerification hook | Frontend | 1h | P0 |
+| Build VerificationCard UI | Frontend | 1h | P0 |
+| Wire proof → contract call | Frontend | 1h | P0 |
+| Deploy contracts to Anvil | Prajwal | 30m | P0 |
+| Build merchant demo page | Frontend | 1.5h | P0 |
+| E2E testing | All | 1.5h | P0 |
+
+### NICE TO HAVE (Polish)
+
+| Task | Owner | Time | Priority |
+|------|-------|------|----------|
+| Loading animations | Frontend | 30m | P1 |
+| Error handling UI | Frontend | 30m | P1 |
+| Hero page styling | Frontend | 30m | P1 |
+| Success confetti | Frontend | 15m | P2 |
+| Mobile responsive | Frontend | 1h | P2 |
 
 ---
 
@@ -171,32 +212,105 @@ packages/nextjs/
 
 | File/Folder | Owner | Status |
 |-------------|-------|--------|
-| `packages/circuits/` | Prajwal | 🔴 Not started |
-| `packages/foundry/contracts/Verifier.sol` | Prajwal | 🔴 Not started |
-| `packages/foundry/contracts/ZeroKlue.sol` | Prajwal | 🔴 Not started |
-| `packages/nextjs/lib/google-oauth.ts` | Frontend 1 | 🔴 Not started |
-| `packages/nextjs/lib/circuits/` | Frontend 1 | 🔴 Not started |
-| `packages/nextjs/components/VerifyStudent.tsx` | Frontend 1 | 🔴 Not started |
-| `packages/nextjs/app/page.tsx` | Frontend 2 | 🔴 Not started |
-| `packages/nextjs/components/DiscountMarketplace.tsx` | Frontend 2 | 🔴 Not started |
+| `packages/circuits/` | Prajwal | ✅ Done |
+| `packages/foundry/contracts/HonkVerifier.sol` | Prajwal | ✅ Done |
+| `packages/foundry/contracts/ZeroKlue.sol` | Prajwal | ✅ Done |
+| `packages/nextjs/lib/providers/google-oauth.ts` | Frontend | 🔴 TODO |
+| `packages/nextjs/lib/circuits/jwt.ts` | Frontend | 🔴 TODO |
+| `packages/nextjs/lib/ephemeral-key.ts` | Frontend | 🔴 TODO |
+| `packages/nextjs/hooks/useStudentVerification.ts` | Frontend | 🔴 TODO |
+| `packages/nextjs/components/VerificationCard.tsx` | Frontend | 🔴 TODO |
+| `packages/nextjs/app/page.tsx` | Frontend | 🔴 TODO |
+| `packages/nextjs/app/merchant/page.tsx` | Frontend | 🔴 TODO |
+| `packages/nextjs/contracts/deployedContracts.ts` | Prajwal | 🔴 After deploy |
+
+---
+
+## Files to Copy from StealthNote
+
+```bash
+# From StealthNote repo to ZeroKlue
+# (adjust paths as needed)
+
+# OAuth provider
+cp stealthnote/app/lib/providers/google-oauth.ts \
+   zeroklue-app/packages/nextjs/lib/providers/
+
+# Circuit helper
+cp stealthnote/app/lib/circuits/jwt.ts \
+   zeroklue-app/packages/nextjs/lib/circuits/
+
+# Ephemeral key
+cp stealthnote/app/lib/ephemeral-key.ts \
+   zeroklue-app/packages/nextjs/lib/
+
+# Lazy modules
+cp stealthnote/app/lib/lazy-modules.ts \
+   zeroklue-app/packages/nextjs/lib/
+
+# Utils
+cp stealthnote/app/lib/utils.ts \
+   zeroklue-app/packages/nextjs/lib/
+
+# Circuit artifacts
+cp stealthnote/app/assets/jwt/circuit.json \
+   zeroklue-app/packages/nextjs/public/circuits/
+cp stealthnote/app/assets/jwt/circuit-vkey.json \
+   zeroklue-app/packages/nextjs/public/circuits/
+```
 
 ---
 
 ## Quick Commands
 
 ```bash
-# Prajwal - Circuit & Contracts
-cd packages/circuits && nargo compile
-bb write_vk -b ./target/main.json -o ./target --oracle_hash keccak
-bb write_solidity_verifier -k ./target/vk -o ../foundry/contracts/Verifier.sol
-cd ../foundry && forge test
+# Prajwal - Deploy contracts
+cd zeroklue-app && yarn chain   # Terminal 1
+cd zeroklue-app && yarn deploy  # Terminal 2 (after chain is running)
 
-# Frontend 1 - Start dev
-cd zeroklue-app && yarn install && yarn start
+# Frontend - Start dev
+cd zeroklue-app && yarn install
+cd zeroklue-app/packages/nextjs && yarn add @aztec/bb.js @noir-lang/noir_js noir-jwt @noble/ed25519 @noble/hashes
+yarn start
 
-# Frontend 2 - Just UI work
-cd zeroklue-app/packages/nextjs && yarn dev
+# Test full flow
+# 1. MetaMask: Add network localhost:8545, chain ID 31337
+# 2. Import test account (Anvil provides private keys)
+# 3. Open localhost:3000
+# 4. Connect wallet → Verify with Google → Wait for proof → Check merchant page
 ```
+
+---
+
+## Demo Day Checklist
+
+- [ ] Local chain running (Anvil)
+- [ ] Contracts deployed
+- [ ] Frontend running on localhost:3000
+- [ ] MetaMask connected to localhost:8545
+- [ ] Test account with ETH imported
+- [ ] Google OAuth working
+- [ ] Proof generation completes (~30 sec)
+- [ ] Contract verification succeeds
+- [ ] Merchant page shows discount for verified wallet
+- [ ] Demo script practiced
+
+---
+
+## Time Budget (Remaining ~17 hours)
+
+| Phase | Time | Running Total |
+|-------|------|---------------|
+| Frontend integration | 3h | 3h |
+| Contract deployment | 0.5h | 3.5h |
+| Merchant demo page | 1.5h | 5h |
+| E2E testing + debugging | 2h | 7h |
+| Demo polish | 1h | 8h |
+| Buffer for issues | 2h | 10h |
+| **Presentation prep** | 2h | 12h |
+| **Sleep/rest** | 5h | 17h |
+
+**You have enough time. Stay focused. Ship it.** 🚀
 
 ---
 

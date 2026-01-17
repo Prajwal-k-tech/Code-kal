@@ -2,15 +2,40 @@
 
 > **Verify once. Prove forever. Stay private.**
 
-ZeroKlue enables students to cryptographically prove their university status without revealing personal data. Built with Noir ZK circuits and verified on-chain via Scaffold-ETH 2.
+ZeroKlue enables students to cryptographically prove their university status without revealing personal data. Built with Noir ZK circuits (adapted from [StealthNote](https://github.com/saleel/stealthnote)) and verified on-chain via Scaffold-ETH 2.
 
 ## 🎯 What is ZeroKlue?
 
-Sign in with Google → ZK proof generated in browser → Submit to smart contract → Receive soulbound NFT → Access discounts across Web3.
+Sign in with Google → ZK proof generated in browser → Submit to smart contract → Student status recorded → Access discounts across Web3.
 
 **The Problem**: Current solutions (SheerID, UNiDAYS) collect unnecessary personal data and require trusting centralized services.
 
 **Our Solution**: Trustless verification using Google's JWT signatures + zero-knowledge proofs. **No backend. No database. No data collection.**
+
+## 🚀 The Demo Flow
+
+```
+┌───────────────────────────────────────────────────────────┐
+│  ZEROKLUE APP                                             │
+├───────────────────────────────────────────────────────────┤
+│  1. Connect MetaMask wallet                               │
+│  2. Click "Verify with Google"                            │
+│  3. Sign in with @iiitkottayam.ac.in                      │
+│  4. Wait ~30 seconds for ZK proof generation              │
+│  5. Proof submitted → Student status recorded on-chain    │
+└───────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌───────────────────────────────────────────────────────────┐
+│  MERCHANT DEMO                                            │
+├───────────────────────────────────────────────────────────┤
+│  1. Visit merchant page                                   │
+│  2. Connect same wallet                                   │
+│  3. Contract checks: isVerified(wallet)?                  │
+│  4. ✅ YES → Discount applied                             │
+│  5. Merchant NEVER sees your email                        │
+└───────────────────────────────────────────────────────────┘
+```
 
 ## 🏗️ Architecture
 
