@@ -216,6 +216,29 @@
 
 ---
 
+## UI/UX & Design System
+
+**Aesthetic**: "Pallet Ross" / Vibrant / Modern Dark Mode.  
+The interface uses a deep, rich dark mode with animated mesh gradients to create a premium, "alive" feel.
+
+### Color Palette
+
+| Color Name | Hex Code | Usage |
+|------------|----------|-------|
+| **Deep Navy** | `#0a0a2e` | Main Background Base |
+| **Electric Purple** | `#7c3aed` | Primary Gradient Blob (Right) |
+| **Accent Purple** | `#4c1d95` | Secondary Gradient Blob (Left) |
+| **Deep Blue** | `#1e3a8a` | Bottom Gradient Anchor |
+| **Cyan / Teal** | `#06b6d4` | Highlights, Buttons, Text Accents |
+| **White** | `#ffffff` | Primary Text, Card Backgrounds (Grid) |
+
+### Components
+- **Animated Background**: CSS-driven mesh gradient using the colors above.
+- **Glassmorphism**: Used for badges and overlays (`backdrop-blur`).
+- **Cards**: Minimal white text on fan view; expansive white cards with shadows in grid view.
+
+---
+
 ## Pivot Opportunity
 
 The same circuit works for ANY Google Workspace domain:
