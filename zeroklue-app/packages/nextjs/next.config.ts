@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
     config.externals.push("pino-pretty", "lokijs", "encoding");
     return config;
   },
+  // Note: COOP/COEP headers removed - they conflict with Base Account SDK
+  // ZK proofs will run in single-threaded mode instead
 };
 
 const isIpfs = process.env.NEXT_PUBLIC_IPFS_BUILD === "true";

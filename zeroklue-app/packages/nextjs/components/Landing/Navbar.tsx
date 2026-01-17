@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export const Navbar = () => {
     return (
@@ -17,19 +20,39 @@ export const Navbar = () => {
                     ZeroKlue
                 </Link>
             </div>
-            <div className="navbar-center hidden lg:flex">
-                <ul className="menu menu-horizontal px-1 text-gray-300 font-medium">
-                    <li><Link href="#" className="hover:text-white">Product</Link></li>
-                    <li><Link href="#" className="hover:text-white">How It Works</Link></li>
-                    <li><Link href="#" className="hover:text-white">Students</Link></li>
-                    <li><Link href="#" className="hover:text-white">Partners</Link></li>
-                    <li><Link href="#" className="hover:text-white">Docs</Link></li>
-                </ul>
-            </div>
+
             <div className="navbar-end">
-                <Link href="/verify" className="btn bg-white text-indigo-900 hover:bg-gray-100 border-none rounded-full px-6 font-bold">
-                    GET STARTED ↗
-                </Link>
+                <ConnectButton.Custom>
+                    {({ account, chain, openConnectModal, mounted }) => {
+                        const connected = mounted && account && chain;
+
+                        return (
+                            <>
+                                {!connected ? (
+                                    <button
+                                        onClick={openConnectModal}
+                                        type="button"
+                                        className="btn bg-white text-indigo-900 hover:bg-gray-100 border-none rounded-full px-6 font-bold"
+                                    >
+                                        Connect Wallet
+                                    </button>
+                                ) : (
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-white/80 text-sm hidden md:block">
+                                            {account.displayName}
+                                        </span>
+                                        <Link
+                                            href="/verify"
+                                            className="btn bg-pink-500 hover:bg-pink-600 text-white border-none rounded-full px-6 font-bold"
+                                        >
+                                            Get Verified
+                                        </Link>
+                                    </div>
+                                )}
+                            </>
+                        );
+                    }}
+                </ConnectButton.Custom>
             </div>
         </div>
     );

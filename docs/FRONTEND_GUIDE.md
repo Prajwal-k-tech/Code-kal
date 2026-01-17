@@ -181,11 +181,11 @@ export default function MerchantPage() {
 
 | Component | Priority |
 |-----------|----------|
-| Landing page with hero | P0 |
+| Landing page with hero | P0 |-done
 | VerificationCard with progress | P0 |
 | Success state with NFT badge | P0 |
 | Merchant demo page | P1 |
-| Offers grid | P2 |
+| Offers grid | P2 |-shiv is building
 
 ---
 

@@ -122,8 +122,8 @@ export function HeroSection({
                                 {buttonText}
                                 <CheckBadgeIcon className="w-5 h-5" />
                             </Link>
-                            <Link href="#" className="btn bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg px-6 py-3 h-auto text-base font-bold backdrop-blur-sm transition-all hover:border-white/40">
-                                PARTNER WITH US
+                            <Link href="/marketplace" className="btn bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg px-6 py-3 h-auto text-base font-bold backdrop-blur-sm transition-all hover:border-white/40">
+                                EXPLORE MARKETPLACE
                             </Link>
                         </div>
                     </div>

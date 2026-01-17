@@ -2,131 +2,224 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { CheckCircleIcon, ArrowLeftIcon, StarIcon, PlayCircleIcon, DocumentTextIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { useStudentNFT } from "~~/hooks/scaffold-eth/useStudentNFT";
 
 /**
- * Merchant Demo Page
- * Simulates TechMart electronics store with student discount
- *
- * @owner Frontend Dev 2
+ * Merchant Page - Cyfrin Updraft Course
+ * Shows the advanced security course with student discount verification
  */
 export default function MerchantPage() {
   const { hasNFT, isLoading, isConnected } = useStudentNFT();
-  const [quantity, setQuantity] = useState(1);
 
-  const originalPrice = 999;
-  const studentDiscount = 200;
-  const finalPrice = hasNFT ? originalPrice - studentDiscount : originalPrice;
+  const coursePrice = 1299.00;
+  const discountAmount = 1299.00; // 100% OFF
+  const finalPrice = hasNFT ? 0 : coursePrice;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-900 to-indigo-700">
-      {/* Header */}
-      <header className="bg-white/10 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="text-white font-bold text-2xl">💻 TechMart</div>
+    <div className="min-h-screen bg-[#0f172a] text-slate-200 font-sans selection:bg-blue-500/30 selection:text-blue-200">
+
+      {/* Navigation */}
+      <nav className="border-b border-white/5 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2 text-white font-bold text-xl tracking-tight">
+              <div className="w-8 h-8 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/20">
+                <span className="text-white font-mono text-lg">C</span>
+              </div>
+              Cyfrin Updraft
+            </div>
+            <div className="hidden md:flex gap-6 text-sm font-medium text-slate-400">
+              <a href="#" className="hover:text-white transition-colors">Courses</a>
+              <a href="#" className="hover:text-white transition-colors">Audits</a>
+              <a href="#" className="hover:text-white transition-colors">Blog</a>
+            </div>
+          </div>
           <div className="flex items-center gap-4">
-            {hasNFT && <span className="badge badge-success gap-1">✓ Student Verified</span>}
-            <Link href="/marketplace" className="btn btn-ghost btn-sm text-white">
-              ← Back to ZeroKlue
+            <Link href="/marketplace" className="text-sm text-slate-400 hover:text-white transition-colors flex items-center gap-2">
+              <ArrowLeftIcon className="w-4 h-4" />
+              Back to ZeroKlue
             </Link>
+            {hasNFT && <span className="badge badge-success gap-1">✓ Student Verified</span>}
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* Product */}
-      <main className="container mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          {/* Product Image */}
-          <div className="bg-white/5 rounded-3xl p-12 backdrop-blur-sm">
-            <div className="text-center text-9xl">💻</div>
-            <p className="text-white/60 text-center mt-4">TechMart Pro Laptop 2026</p>
+      <main className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+        {/* Left Column: Course Content */}
+        <div className="lg:col-span-8 space-y-8">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-xs font-mono text-blue-400">
+            <span>COURSES</span>
+            <span>/</span>
+            <span className="text-slate-400">ADVANCED SECURITY</span>
           </div>
 
-          {/* Product Details */}
-          <div className="text-white space-y-6">
-            <h1 className="text-4xl font-bold">TechMart Pro Laptop</h1>
-            <p className="text-white/60 text-lg">
-              The most powerful laptop for students. M3 Max chip, 32GB RAM, 1TB SSD. Perfect for coding, design, and
-              everything in between.
-            </p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            Advanced Smart Contract <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+              Security & Auditing
+            </span>
+          </h1>
 
-            {/* Price Section */}
-            <div className="bg-white/10 rounded-2xl p-6 space-y-4">
+          <div className="flex flex-wrap gap-6 text-sm text-slate-400">
+            <div className="flex items-center gap-2">
+              <div className="flex text-yellow-500"><StarIcon className="w-4 h-4 fill-current" /><StarIcon className="w-4 h-4 fill-current" /><StarIcon className="w-4 h-4 fill-current" /><StarIcon className="w-4 h-4 fill-current" /><StarIcon className="w-4 h-4 fill-current" /></div>
+              <span>(4.9/5 stars)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <DocumentTextIcon className="w-4 h-4" />
+              <span>75 Lessons</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ClockIcon className="w-4 h-4" />
+              <span>45 Hours</span>
+            </div>
+            <div className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold border border-blue-500/20">
+              INTERMEDIATE
+            </div>
+          </div>
+
+          {/* Course Thumbnail / Preview */}
+          <div className="aspect-video w-full rounded-2xl bg-slate-800 border border-white/5 relative overflow-hidden group shadow-2xl shadow-blue-900/10">
+            <img
+              src="https://images.unsplash.com/photo-1639322537228-ad714291be30?q=80&w=2832&auto=format&fit=crop"
+              alt="Course Preview"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-transparent to-transparent"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <button className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20 hover:scale-110 transition-transform">
+                <PlayCircleIcon className="w-8 h-8 ml-1" />
+              </button>
+            </div>
+          </div>
+
+          {/* Syllabus Preview */}
+          <div className="space-y-4 pt-8">
+            <h3 className="text-xl font-bold text-white">Course Syllabus</h3>
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-slate-800/50 border border-white/5 hover:border-blue-500/30 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-sm">
+                    {i}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-slate-200">Module {i}: Foundation of EVM Opcode</div>
+                    <div className="text-xs text-slate-500 mt-1">45 mins • 3 lectures</div>
+                  </div>
+                  <div className="text-slate-600">
+                    <PlayCircleIcon className="w-5 h-5" />
+                  </div>
+                </div>
+              ))}
+              <div className="p-4 text-center text-sm text-slate-500 font-medium">
+                + 12 more modules
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Checkout Card */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="sticky top-24">
+            <div className="p-6 rounded-2xl bg-slate-800/50 border border-white/10 shadow-xl backdrop-blur-sm">
+
+              {/* Price Display */}
               {isLoading ? (
-                <div className="animate-pulse space-y-2">
+                <div className="animate-pulse space-y-2 mb-6">
                   <div className="h-8 bg-white/20 rounded w-1/2" />
                   <div className="h-6 bg-white/20 rounded w-1/3" />
                 </div>
               ) : (
-                <>
-                  <div className="flex items-baseline gap-4">
-                    <span className="text-4xl font-bold">${finalPrice}</span>
-                    {hasNFT && <span className="text-white/60 line-through text-xl">${originalPrice}</span>}
-                  </div>
-
+                <div className="flex items-end gap-2 mb-6">
                   {hasNFT ? (
-                    <div className="flex items-center gap-2 text-green-400">
-                      <span>🎓</span>
-                      <span>Student discount applied: -${studentDiscount}</span>
-                    </div>
+                    <>
+                      <span className="text-3xl font-extrabold text-white">FREE</span>
+                      <span className="text-lg text-slate-500 line-through mb-1">${coursePrice}</span>
+                    </>
                   ) : (
+                    <span className="text-3xl font-extrabold text-white">${coursePrice}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Enroll Button */}
+              <button
+                className={`w-full py-4 rounded-xl font-bold text-sm mb-4 flex items-center justify-center gap-2 transition-all ${hasNFT
+                    ? "bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-900/20"
+                    : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"
+                  }`}
+              >
+                {hasNFT ? "Enroll for Free" : "Enroll Now"}
+              </button>
+
+              <p className="text-xs text-center text-slate-500 mb-6">
+                30-day money-back guarantee • Lifetime access
+              </p>
+
+              {/* Separator */}
+              <div className="relative h-px bg-white/10 my-6">
+                <span className="absolute left-1/2 -top-2.5 -ml-4 bg-slate-800/50 px-2 text-xs text-slate-500">
+                  OR
+                </span>
+              </div>
+
+              {/* Student Discount Section */}
+              <div className="space-y-4">
+                {!hasNFT && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-500/50"></div>
+                      <span className="text-xs font-bold text-blue-400 tracking-wider">STUDENT DISCOUNT</span>
+                      <div className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-500/50"></div>
+                    </div>
+
                     <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4">
-                      <p className="text-yellow-200 font-medium">🎓 Students save ${studentDiscount}!</p>
+                      <p className="text-yellow-200 font-medium">🎓 Students get this course FREE!</p>
                       <p className="text-yellow-200/60 text-sm mt-1">
                         {isConnected
                           ? "Verify with ZeroKlue to unlock student pricing"
                           : "Connect wallet and verify with ZeroKlue to unlock"}
                       </p>
-                      <Link href="/verify" className="btn btn-warning btn-sm mt-3">
+                      <Link href="/verify" className="btn btn-warning btn-sm mt-3 w-full">
                         Verify Student Status
                       </Link>
                     </div>
-                  )}
-                </>
-              )}
+                  </div>
+                )}
+
+                {hasNFT && (
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex flex-col items-center text-center gap-2">
+                    <CheckCircleIcon className="w-8 h-8 text-green-400" />
+                    <div>
+                      <div className="font-bold text-green-400 text-sm">Student Verified!</div>
+                      <div className="text-xs text-green-300/70">100% Discount Applied</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
             </div>
 
-            {/* Quantity & Add to Cart */}
-            <div className="flex items-center gap-4">
-              <div className="join">
-                <button className="btn join-item" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
-                  -
-                </button>
-                <span className="btn join-item pointer-events-none">{quantity}</span>
-                <button className="btn join-item" onClick={() => setQuantity(quantity + 1)}>
-                  +
-                </button>
-              </div>
-
-              <button className="btn btn-primary flex-1">Add to Cart - ${finalPrice * quantity}</button>
+            {/* Trust Badges */}
+            <div className="mt-8 grid grid-cols-2 gap-4 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+              <div className="h-8 bg-white/10 rounded flex items-center justify-center text-[10px] font-bold">ETHEREUM</div>
+              <div className="h-8 bg-white/10 rounded flex items-center justify-center text-[10px] font-bold">POLYGON</div>
             </div>
 
-            {/* Features */}
-            <div className="grid grid-cols-3 gap-4 pt-4">
-              <div className="text-center p-4 bg-white/5 rounded-xl">
-                <div className="text-2xl mb-2">🚀</div>
-                <p className="text-sm text-white/60">M3 Max Chip</p>
-              </div>
-              <div className="text-center p-4 bg-white/5 rounded-xl">
-                <div className="text-2xl mb-2">💾</div>
-                <p className="text-sm text-white/60">32GB RAM</p>
-              </div>
-              <div className="text-center p-4 bg-white/5 rounded-xl">
-                <div className="text-2xl mb-2">📦</div>
-                <p className="text-sm text-white/60">Free Shipping</p>
+            {/* Powered by ZeroKlue */}
+            <div className="mt-8 text-center">
+              <div className="inline-flex items-center gap-2 bg-white/10 px-6 py-3 rounded-full">
+                <span className="text-white/60">Powered by</span>
+                <span className="font-bold text-white">ZeroKlue</span>
+                <span className="text-white/60">• Privacy-Preserving Verification</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ZeroKlue Badge */}
-        <div className="mt-16 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 px-6 py-3 rounded-full">
-            <span className="text-white/60">Powered by</span>
-            <span className="font-bold text-white">ZeroKlue</span>
-            <span className="text-white/60">• Privacy-Preserving Student Verification</span>
-          </div>
-        </div>
       </main>
     </div>
   );

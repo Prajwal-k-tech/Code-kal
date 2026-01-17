@@ -20,10 +20,10 @@ export const offers: Offer[] = [
   },
   {
     id: "2",
-    partnerName: "PixelPerfect",
-    description: "ChainAcademy Design Course",
+    partnerName: "Cyfrin Updraft",
+    description: "Advanced Security Course",
     discount: "100% OFF",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
+    logo: "https://cdn-icons-png.flaticon.com/512/2716/2716607.png",
     category: "Software",
     bgColor: "bg-[#0f172a]",
   },
