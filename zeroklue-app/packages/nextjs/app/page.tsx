@@ -1,11 +1,12 @@
-"use client";
-
+import { Navbar } from "~~/components/Landing/Navbar";
+import { HeroSection } from "~~/components/ui/hero-section-with-smooth-bg-shader";
 import type { NextPage } from "next";
 
 const Home: NextPage = () => {
   return (
-    <div className="flex items-center flex-col grow pt-10">
-      <h1 className="text-4xl font-bold">ZeroKlue</h1>
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <HeroSection />
     </div>
   );
 };

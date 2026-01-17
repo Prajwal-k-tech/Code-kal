@@ -1,7 +1,16 @@
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
 /**
- * ZeroKlue Utility Functions
- * Adapted from StealthNote
+ * Shadcn UI utility for merging Tailwind classes
  */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+// ============================================
+// ZeroKlue Utility Functions (from StealthNote)
+// ============================================
 
 /**
  * Convert Uint8Array to BigInt
@@ -58,7 +67,7 @@ export async function pubkeyModulusFromJWK(jwk: JsonWebKey): Promise<bigint> {
   );
 
   const publicKeyJWK = await crypto.subtle.exportKey("jwk", publicKey);
-  
+
   // Convert base64url to hex
   const modulusBase64 = publicKeyJWK.n as string;
   const modulusBytes = Uint8Array.from(atob(modulusBase64.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
@@ -86,7 +95,6 @@ export function formatDomain(domain: string): string {
 
 /**
  * Check if a domain is a valid university domain
- * This is a simple check - in production, you'd have a whitelist
  */
 export function isUniversityDomain(domain: string): boolean {
   const eduPatterns = [
@@ -96,7 +104,7 @@ export function isUniversityDomain(domain: string): boolean {
     /\.uni-.*$/,        // German universities
     /\.university$/,    // Generic
   ];
-  
+
   return eduPatterns.some((pattern) => pattern.test(domain.toLowerCase()));
 }
 
