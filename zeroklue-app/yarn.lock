@@ -2680,6 +2680,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@paper-design/shaders-react@npm:^0.0.70":
+  version: 0.0.70
+  resolution: "@paper-design/shaders-react@npm:0.0.70"
+  dependencies:
+    "@paper-design/shaders": 0.0.70
+  peerDependencies:
+    "@types/react": ^18 || ^19
+    react: ^18 || ^19
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 890d0e05c498395a93dea70f2c46f8fecdbac81597e7ee970d7b3cb80319002b71826874cff9301091b81db31a6ad6fcf28923211bfd2daa919ef6f02823bcd4
+  languageName: node
+  linkType: hard
+
+"@paper-design/shaders@npm:0.0.70":
+  version: 0.0.70
+  resolution: "@paper-design/shaders@npm:0.0.70"
+  checksum: d69014cbd2114418e73f7159bc641ad8be0bc0b07873d2c006bf2e908bc200ee745692b33e7e6cbc3de9ad508f63ca440f0593438598afa7a6986fc04c829dc8
+  languageName: node
+  linkType: hard
+
 "@paulmillr/qr@npm:^0.2.1":
   version: 0.2.1
   resolution: "@paulmillr/qr@npm:0.2.1"
@@ -3138,6 +3160,7 @@ __metadata:
   resolution: "@se-2/nextjs@workspace:packages/nextjs"
   dependencies:
     "@heroicons/react": ~2.1.5
+    "@paper-design/shaders-react": ^0.0.70
     "@rainbow-me/rainbowkit": 2.2.9
     "@react-native-async-storage/async-storage": ~2.2.0
     "@scaffold-ui/components": ^0.1.7
@@ -3153,6 +3176,7 @@ __metadata:
     bgipfs: ~0.0.12
     blo: ~1.2.0
     burner-connector: 0.0.20
+    class-variance-authority: ^0.7.1
     clsx: ^2.1.1
     daisyui: 5.0.9
     eslint: ~9.23.0
@@ -3161,6 +3185,7 @@ __metadata:
     eslint-plugin-prettier: ~5.2.4
     framer-motion: ^12.26.2
     kubo-rpc-client: ~5.0.2
+    lucide-react: ^0.562.0
     next: ~15.2.8
     next-nprogress-bar: ~2.3.13
     next-themes: ~0.3.0
@@ -3172,6 +3197,7 @@ __metadata:
     react-hot-toast: ~2.4.0
     tailwind-merge: ^3.4.0
     tailwindcss: 4.1.3
+    tw-animate-css: ^1.4.0
     type-fest: ~4.26.1
     typescript: ~5.8.2
     usehooks-ts: ~3.1.0
@@ -6601,6 +6627,15 @@ __metadata:
   version: 1.2.3
   resolution: "cjs-module-lexer@npm:1.2.3"
   checksum: 5ea3cb867a9bb609b6d476cd86590d105f3cfd6514db38ff71f63992ab40939c2feb68967faa15a6d2b1f90daa6416b79ea2de486e9e2485a6f8b66a21b4fb0a
+  languageName: node
+  linkType: hard
+
+"class-variance-authority@npm:^0.7.1":
+  version: 0.7.1
+  resolution: "class-variance-authority@npm:0.7.1"
+  dependencies:
+    clsx: ^2.1.1
+  checksum: e05ba26ef9ec38f7c675047ce366b067d60af6c954dba08f7802af19a9460a534ae752d8fe1294fff99d0fa94a669b16ccebd87e8a20f637c0736cf2751dd2c5
   languageName: node
   linkType: hard
 
@@ -10967,6 +11002,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lucide-react@npm:^0.562.0":
+  version: 0.562.0
+  resolution: "lucide-react@npm:0.562.0"
+  peerDependencies:
+    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 45e4f4abd4cee341882c7a2ae0ff3874f26d30682c1ea5f744269219c8f6fbac0aa78c24f64247a2d8236297aef439babfb96d76182f859c36ac18457f475bf3
+  languageName: node
+  linkType: hard
+
 "main-event@npm:^1.0.1":
   version: 1.0.1
   resolution: "main-event@npm:1.0.1"
@@ -14788,6 +14832,13 @@ __metadata:
     debug: ^4.4.1
     make-fetch-happen: ^14.0.3
   checksum: 1a45a055e97041459aacca576e439baf0517d88db3eb600479b57fb60c2403dc193048135f1a2612378dc0b00c8437ec990b132d404b0a5e7471bf2e2824d2aa
+  languageName: node
+  linkType: hard
+
+"tw-animate-css@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "tw-animate-css@npm:1.4.0"
+  checksum: eb2b3b32f12e2f6973f4299564c470ab0145d89098f28cd238c97672b3b43b6c870e52ed46f41ea1a105504ecba20148ac0fded7f8992bbaad4bc1f1bbedbd43
   languageName: node
   linkType: hard
 
