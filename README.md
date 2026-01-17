@@ -66,38 +66,29 @@ Sign in with Google → ZK proof generated in browser → Submit to smart contra
 
 ```
 codekal/
-├── packages/
-│   └── circuits/              # Noir ZK circuits (ported from StealthNote)
-│       ├── Nargo.toml         # noir-jwt dependency
-│       └── src/main.nr        # JWT verification circuit
-│
-├── zeroklue-app/              # Scaffold-ETH 2 app
+├── zeroklue-app/              # 🎯 Main app (Scaffold-ETH 2)
 │   └── packages/
 │       ├── foundry/           # Smart contracts
 │       │   └── contracts/
-│       │       ├── Verifier.sol      # Auto-generated
-│       │       └── ZeroKlue.sol      # NFT + verification
+│       │       ├── HonkVerifier.sol  # ZK proof verifier (generated)
+│       │       └── ZeroKlue.sol      # Student registry + soulbound NFT
 │       └── nextjs/            # Frontend
+│           ├── app/           # Next.js pages
+│           ├── components/    # UI components
 │           ├── lib/
 │           │   ├── providers/google-oauth.ts
 │           │   └── circuits/jwt.ts
-│           └── hooks/
-│               └── useStudentVerification.ts
+│           ├── hooks/
+│           │   └── useStudentVerification.ts
+│           └── public/circuits/circuit.json  # Compiled Noir circuit
 │
 ├── docs/                      # 📚 All documentation
 │   ├── QUICKSTART.md          # 👈 Start here
 │   ├── FRONTEND_GUIDE.md      # Frontend dev guide
+│   ├── FRONTEND_COMMENTS.md   # Code review feedback
 │   ├── ROADMAP.md             # What's left to build
 │   ├── ENGINEERING_PLAN.md    # Technical architecture
-│   ├── PITCH.md               # Project pitch
-│   ├── HACKATHON_QA.md        # Judge Q&A prep
-│   ├── PRD.md                 # Product requirements
-│   ├── TEAM_PLAN.md           # Task division
-│   └── TECHNICAL_DECISIONS.md # Why JWT not OTP
-│
-├── packages/                  # ⚠️ DEPRECATED - don't use
-│   ├── backend/               # Old OTP approach - not used
-│   └── circuits/              # Old EdDSA circuit - not used
+│   └── ...                    # More docs
 ```
 
 ## 🚀 Quick Start
