@@ -103,16 +103,10 @@ export const JWTCircuitHelper = {
       }
       return `0x${input.toString(16).padStart(64, "0")}` as `0x${string}`;
     });
-<<<<<<< HEAD
 
-    // The nullifier is the last public input (index 84)
-    const nullifier = formattedInputs[84] || formattedInputs[formattedInputs.length - 1];
-=======
-    
     // The ephemeral public key is at index 83 (see TECHNICAL_DECISIONS.md)
     // Layout: pubkey_limbs(18) + domain(64) + domain_len(1) + ephemeral_pubkey(1) + expiry(1) = 85
     const ephemeralPubkey = formattedInputs[83];
->>>>>>> 2b3850a13ab9e092c0dde881465f74fd527b8b79
 
     return {
       proofHex,
