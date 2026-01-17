@@ -79,16 +79,20 @@ codekal/
 │       │       └── ZeroKlue.sol      # NFT + verification
 │       └── nextjs/            # Frontend
 │           ├── lib/
-│           │   ├── google-oauth.ts
+│           │   ├── providers/google-oauth.ts
 │           │   └── circuits/jwt.ts
-│           └── components/
-│               ├── VerifyStudent.tsx
-│               └── DiscountMarketplace.tsx
+│           └── hooks/
+│               └── useStudentVerification.ts
 │
-├── PRD.md                     # Product requirements
-├── TEAM_PLAN.md               # Task division
-├── ENGINEERING_PLAN.md        # Technical implementation
-└── TECHNICAL_DECISIONS.md     # Architecture decisions
+├── packages/                  # ⚠️ DEPRECATED - don't use
+│   ├── backend/               # Old OTP approach - not used
+│   └── circuits/              # Old EdDSA circuit - not used
+│
+├── FRONTEND_GUIDE.md          # 👈 Frontend dev start here
+├── QUICKSTART.md              # Setup instructions
+├── ROADMAP.md                 # What's left to build
+├── ENGINEERING_PLAN.md        # Technical architecture
+└── HACKATHON_QA.md            # Judge Q&A prep
 ```
 
 ## 🚀 Quick Start
@@ -96,9 +100,7 @@ codekal/
 ### Prerequisites
 
 - Node.js 18+
-- [Nargo 1.0.0-beta](https://noir-lang.org/docs/getting_started/installation/) 
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
-- [Barretenberg](https://github.com/AztecProtocol/aztec-packages/tree/master/barretenberg)
 
 ### Installation
 
@@ -108,29 +110,26 @@ git clone https://github.com/Prajwal-k-tech/Code-kal.git
 cd Code-kal
 
 # Install dependencies
+cd zeroklue-app
 yarn install
 
-# Compile the circuit
-cd packages/circuits
-nargo compile
-
 # Start local chain (Terminal 1)
-cd zeroklue-app
 yarn chain
 
 # Deploy contracts (Terminal 2)
 yarn deploy
 
 # Start frontend (Terminal 3)
-yarn start
+cd packages/nextjs
+yarn dev
 ```
 
 ### Demo Flow
 
 1. Open http://localhost:3000
 2. Connect wallet (MetaMask)
-3. Click "Verify Student Status"
-4. Sign in with Google (@university.edu)
+3. Click "Verify with Google"
+4. Sign in with @university.edu
 5. Wait for ZK proof generation (~30 seconds)
 6. Confirm transaction
 7. 🎉 Soulbound NFT minted!
@@ -138,10 +137,6 @@ yarn start
 ## 🧪 Testing
 
 ```bash
-# Test Noir circuit
-cd packages/circuits
-nargo test
-
 # Test smart contracts
 cd zeroklue-app/packages/foundry
 forge test -vvv
@@ -151,20 +146,20 @@ forge test -vvv
 
 | Document | Description |
 |----------|-------------|
-| [PRD.md](PRD.md) | Product requirements & user stories |
-| [TEAM_PLAN.md](TEAM_PLAN.md) | Task division & timeline |
-| [ENGINEERING_PLAN.md](ENGINEERING_PLAN.md) | Technical implementation details |
-| [TECHNICAL_DECISIONS.md](TECHNICAL_DECISIONS.md) | Architecture decisions & rationale |
-| [RESEARCH_FINDINGS.md](RESEARCH_FINDINGS.md) | StealthNote analysis |
+| [FRONTEND_GUIDE.md](FRONTEND_GUIDE.md) | Frontend development guide |
+| [QUICKSTART.md](QUICKSTART.md) | Setup instructions |
+| [ROADMAP.md](ROADMAP.md) | What's left to build |
+| [ENGINEERING_PLAN.md](ENGINEERING_PLAN.md) | Technical architecture |
+| [HACKATHON_QA.md](HACKATHON_QA.md) | Judge Q&A prep |
 
 ## 📚 Key Technologies
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | ZK Circuits | Noir 1.0.0-beta | JWT signature verification |
-| JWT Library | noir-jwt v0.4.4 | RSA-SHA256 in ZK circuit |
+| JWT Library | noir-jwt | RSA-SHA256 in ZK circuit |
 | Proving Backend | Barretenberg (UltraHonk) | Fast verification on-chain |
-| Smart Contracts | Solidity 0.8.20 (Foundry) | On-chain verification + NFT |
+| Smart Contracts | Solidity 0.8.21 (Foundry) | On-chain verification + NFT |
 | Frontend | Next.js 15 (Scaffold-ETH 2) | User interface |
 | Wallet | RainbowKit + wagmi + viem | Ethereum wallet connection |
 | OAuth | Google OAuth 2.0 | JWT token acquisition |
@@ -184,29 +179,30 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 ### For Students
 
 1. **Connect Wallet**: Connect MetaMask or any EVM wallet
-2. **Google Sign-In**: Click "Verify Student Status" → Sign in with @university.edu
+2. **Google Sign-In**: Click "Verify with Google" → Sign in with @university.edu
 3. **Proof Generation**: Browser generates ZK proof (~30s) proving valid Google JWT
 4. **Submit Proof**: Send proof to smart contract
 5. **Receive NFT**: Soulbound student pass minted to your wallet
 
-### For Partners
+### For Merchants
 
-```solidity
-bool isStudent = ZeroKlue.balanceOf(userAddress) > 0;
-bytes32 domainHash = ZeroKlue.getDomainHash(tokenId);
+```tsx
+// Check if wallet has ZeroKlue NFT
+const isStudent = await zeroKlue.isVerified(walletAddress);
+if (isStudent) applyDiscount();
 ```
 
 ## 🔒 Privacy Guarantees
 
 - **Trustless**: Google signs JWT, we never see credentials
-- **Zero-Knowledge**: Partners never see email/name/university
+- **Zero-Knowledge**: Merchants never see email/name/university
 - **Sybil Resistant**: Nullifier prevents multiple NFTs per account
 - **Soulbound**: NFT cannot be transferred
 
 ## 🙏 Acknowledgments
 
-- [StealthNote](https://github.com/saleel/stealthnote) - Circuit architecture
-- [noir-jwt](https://github.com/saleel/noir-jwt) - JWT verification
+- [StealthNote](https://github.com/nicholashc/stealthnote) - Circuit architecture & code
+- [noir-jwt](https://github.com/saleel/noir-jwt) - JWT verification in Noir
 - [Scaffold-ETH 2](https://scaffoldeth.io) - Frontend framework
 
 ---
