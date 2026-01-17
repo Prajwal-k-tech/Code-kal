@@ -1,0 +1,37 @@
+{
+  "name": "zeroklue-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Privacy-preserving student verification using zero-knowledge proofs",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm run install:frontend && npm run install:backend && npm run install:contracts",
+    "install:frontend": "cd packages/frontend && npm install",
+    "install:backend": "cd packages/backend && npm install",
+    "install:contracts": "cd packages/contracts && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:contracts\"",
+    "dev:frontend": "cd packages/frontend && npm run dev",
+    "dev:backend": "cd packages/backend && npm run dev",
+    "dev:contracts": "cd packages/contracts && npx hardhat node",
+    "build": "npm run build:circuits && npm run build:contracts && npm run build:frontend && npm run build:backend",
+    "build:circuits": "cd packages/circuits && nargo compile",
+    "build:contracts": "cd packages/contracts && npx hardhat compile",
+    "build:frontend": "cd packages/frontend && npm run build",
+    "build:backend": "cd packages/backend && npm run build",
+    "test": "npm run test:circuits && npm run test:contracts && npm run test:backend",
+    "test:circuits": "cd packages/circuits && nargo test",
+    "test:contracts": "cd packages/contracts && npx hardhat test",
+    "test:backend": "cd packages/backend && npm test",
+    "clean": "rm -rf node_modules packages/*/node_modules packages/*/.next packages/*/dist"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}

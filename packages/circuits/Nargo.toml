@@ -1,0 +1,7 @@
+[package]
+name = "zeroklue_circuits"
+type = "bin"
+authors = ["ZeroKlue Team"]
+compiler_version = ">=0.38.0"
+
+[dependencies]
