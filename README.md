@@ -15,7 +15,7 @@ ZeroKlue enables students to cryptographically prove their university status wit
 > ```powershell
 > # In PowerShell (Admin)
 > wsl --install -d Ubuntu
-> # Then open Ubuntu from Start Menu and continue below
+> # Then open Ubuntu from Start Menu and continue below 
 > ```
 
 | Requirement | Install Command |
