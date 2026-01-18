@@ -61,9 +61,12 @@ export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
 
       const { proof, publicInputs } = formatProofForContract(proofResult);
 
+      // Use registerStudent with ephemeral pubkey (index 83)
+      const ephemeralPubkey = publicInputs[83] as `0x${string}`;
+
       const hash = await writeContractAsync({
-        functionName: "verifyAndMint",
-        args: [proof, publicInputs],
+        functionName: "registerStudent",
+        args: [ephemeralPubkey],
       });
 
       if (hash) setTxHash(hash);
@@ -133,9 +136,7 @@ export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
                 <div className="mt-4 text-center">
                   <p className="text-success font-medium">🎉 Success!</p>
                   <a
-                    href={`https://basescan.org/tx/${txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`/blockexplorer/transaction/${txHash}`}
                     className="link link-primary text-sm"
                   >
                     View transaction

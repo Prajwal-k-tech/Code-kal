@@ -26,9 +26,9 @@ echo "Generating circuit-vkey.json..."
 node -e "const fs = require('fs'); fs.writeFileSync('../../zeroklue-app/packages/nextjs/public/circuits/circuit-vkey.json', JSON.stringify(Array.from(Uint8Array.from(fs.readFileSync('./target/vk')))));"
 
 echo "Generating Solidity verifier..."
-bb write_solidity_verifier -k ./target/vk -o ../../zeroklue-app/packages/foundry/contracts/Verifier.sol
+bb write_solidity_verifier -k ./target/vk -o ../../zeroklue-app/packages/foundry/contracts/HonkVerifier.sol
 
 echo "Done! Files generated:"
 echo "  - zeroklue-app/packages/nextjs/public/circuits/circuit.json"
 echo "  - zeroklue-app/packages/nextjs/public/circuits/circuit-vkey.json"
-echo "  - zeroklue-app/packages/foundry/contracts/Verifier.sol"
+echo "  - zeroklue-app/packages/foundry/contracts/HonkVerifier.sol"

@@ -66,16 +66,17 @@ export const LocalStorageKeys = {
  * Message to be signed with ephemeral key
  */
 export interface Message {
-  content: string;
-  timestamp: number;
+  text: string;
+  anonGroupId: string;
+  timestamp: Date;
 }
 
 /**
  * Signed message with ephemeral key signature
  */
 export interface SignedMessage extends Message {
-  signature: Uint8Array;
-  publicKey: bigint;
+  signature: bigint;
+  ephemeralPubkey: bigint;
 }
 
 /**

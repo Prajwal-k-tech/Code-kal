@@ -1,35 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { OfferStack } from "./components/OfferStack";
 import { offers } from "./data/offers";
 import { motion } from "framer-motion";
 import { AnimatedBackground } from "./components/AnimatedBackground";
+import { useStudentNFT } from "~~/hooks/scaffold-eth/useStudentNFT";
 
 /**
  * Marketplace Page (Redesigned)
  * 
- * "Pallet Ross" inspired aesthetic with User's Color Palette.
+ * Checks ACTUAL on-chain verification status via useStudentNFT hook.
  */
 export default function MarketplacePage() {
   const searchParams = useSearchParams();
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const router = useRouter();
 
-  // Auto-unmask offers if coming from successful verification
+  // Check REAL on-chain verification status
+  const { hasNFT, isLoading } = useStudentNFT();
+
+  // Also check URL param for immediate unlock after verification redirect
+  const urlVerified = searchParams.get("verified") === "true";
+  const isUnlocked = hasNFT || urlVerified;
+
+  // If verified via URL param, refresh to clear param and show clean URL
   useEffect(() => {
-    if (searchParams.get("verified") === "true") {
-      setIsUnlocked(true);
+    if (urlVerified && hasNFT) {
+      // Clean up URL after verification
+      router.replace("/marketplace");
     }
-  }, [searchParams]);
+  }, [urlVerified, hasNFT, router]);
 
   return (
     <div className="min-h-screen text-white overflow-x-hidden selection:bg-cyan-500 selection:text-white">
       {/* Animated Background Layer */}
       <AnimatedBackground />
-
-      {/* Navbar Placeholder (if needed, else standard nav) */}
 
       <main className="container mx-auto px-4 pt-6 pb-12 relative z-10">
 
@@ -40,11 +47,6 @@ export default function MarketplacePage() {
           transition={{ duration: 0.8 }}
           className="text-center mb-8 relative max-w-4xl mx-auto"
         >
-          {/* Floating Badges (Decorations) - Updated colors to match theme */}
-
-
-
-
           <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white leading-[0.9] drop-shadow-2xl">
             A place to claim your <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
@@ -58,15 +60,19 @@ export default function MarketplacePage() {
           </p>
 
           <div className="mt-8 flex justify-center gap-4">
-            {!isUnlocked && (
+            {isLoading ? (
+              <div className="btn btn-lg bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full px-8 pointer-events-none">
+                <span className="loading loading-spinner loading-sm"></span>
+                Checking status...
+              </div>
+            ) : !isUnlocked ? (
               <Link
                 href="/verify"
                 className="btn btn-lg bg-white text-black hover:bg-cyan-50 rounded-full px-8 border-none shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 transition-transform"
               >
                 Get Verified
               </Link>
-            )}
-            {isUnlocked && (
+            ) : (
               <div className="btn btn-lg bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full px-8 pointer-events-none">
                 ✓ Identity Verified
               </div>
@@ -80,7 +86,7 @@ export default function MarketplacePage() {
 
           <div className="text-center mt-10">
             <p className="text-sm text-gray-400">
-              Hover over the stack to reveal your offers.
+              {isUnlocked ? "All offers unlocked! Click to claim." : "Hover over the stack to reveal your offers."}
             </p>
           </div>
         </section>

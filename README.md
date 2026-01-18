@@ -105,6 +105,11 @@ codekal/
 git clone https://github.com/Prajwal-k-tech/Code-kal.git
 cd Code-kal
 
+# 🚀 Easiest Way (Automated)
+chmod +x start-demo.sh
+./start-demo.sh
+
+# 🛠️ Manual Setup (If automation fails)
 # Install dependencies
 cd zeroklue-app
 yarn install

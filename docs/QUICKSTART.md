@@ -273,12 +273,8 @@ Import this into MetaMask for testing.
 
 ## 📚 Key Documents
 
-| Document | Purpose |
-|----------|---------|
 | [TECHNICAL_DEEP_DIVE.md](TECHNICAL_DEEP_DIVE.md) | 🔬 **All technologies + flow explained** |
 | [FRONTEND_GUIDE.md](FRONTEND_GUIDE.md) | Detailed frontend instructions |
-| [BACKEND_READY.md](BACKEND_READY.md) | Contract API + what's ready |
-| [ROADMAP.md](ROADMAP.md) | What's left to build |
 | [ENGINEERING_PLAN.md](ENGINEERING_PLAN.md) | Technical architecture |
 | [HACKATHON_QA.md](HACKATHON_QA.md) | Judge Q&A prep |
 

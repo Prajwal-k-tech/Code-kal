@@ -177,6 +177,16 @@ We're combining two existing markets (ZK identity + student verification) in a n
 
 ## Mentor Round Questions
 
+### "How does this relate to APAAR ID (One Nation One Student ID)?"
+
+**Answer**:
+"APAAR is the **database**. We are the **privacy layer**.
+
+1.  **APAAR**: Centralizes student data (Grades, Degrees, ID). It's great for government interoperability but bad for privacy if shared with every coffee shop.
+2.  **ZeroKlue**: Allows a student to PROVE they have an APAAR ID (or university status) without revealing the ID number itself.
+
+We are not competing with APAAR. We are the bridge that lets students use their APAAR status in the real economy (and Web3) without doxxing themselves to every merchant."
+
 ### "Why blockchain? You could do this with a centralized database."
 
 **Answer**: 

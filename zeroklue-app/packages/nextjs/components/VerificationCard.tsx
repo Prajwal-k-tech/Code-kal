@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useDisconnect } from "wagmi";
 import { useStudentVerification } from "~~/hooks/useStudentVerification";
+import { useStudentNFT } from "~~/hooks/scaffold-eth/useStudentNFT";
 
 interface Step {
   id: string;
@@ -19,6 +20,9 @@ export function VerificationCard() {
   const { isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { verify, reset, status, error, domain, txHash, progress, isLoading } = useStudentVerification();
+
+  // Check if already verified on-chain
+  const { hasNFT, isLoading: nftLoading, verifiedAt } = useStudentNFT();
 
   // Redirect on success state
   const [redirecting, setRedirecting] = useState(false);
@@ -84,111 +88,149 @@ export function VerificationCard() {
         />
 
         <div className="relative z-10 p-8">
-          {/* Header - Only show wallet info when connected, no extra connect button */}
-          <div className="flex items-start justify-between mb-10">
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-1">Get Verified</h2>
-              <p className="text-white/50 text-sm">Prove your student status privately</p>
-            </div>
-            {/* Only show wallet address when connected - no duplicate connect button */}
-            {isConnected && (
-              <div className="flex items-center gap-3">
-                <ConnectButton.Custom>
-                  {({ account }) => account && (
-                    <span className="px-4 py-2 rounded-xl text-sm font-medium text-[#06b6d4] bg-[#06b6d4]/10 border border-[#06b6d4]/20">
-                      {account.displayName}
-                    </span>
-                  )}
-                </ConnectButton.Custom>
-                <button onClick={() => disconnect()} className="text-xs text-white/40 hover:text-red-400 transition-colors">
-                  ✕
-                </button>
+          {/* Already Verified State */}
+          {hasNFT && !nftLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-8"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+              >
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </motion.div>
+              <h3 className="text-2xl font-bold text-white mb-2">Already Verified!</h3>
+              <p className="text-white/60 mb-2">Your student credential is active on-chain</p>
+              {verifiedAt && (
+                <p className="text-white/40 text-sm mb-6">
+                  Verified: {new Date(Number(verifiedAt) * 1000).toLocaleDateString()}
+                </p>
+              )}
+              <Link
+                href="/marketplace"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium transition-all hover:scale-105"
+                style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%)' }}
+              >
+                Go to Marketplace →
+              </Link>
+            </motion.div>
+          )}
+
+          {/* Header - Only show when NOT already verified */}
+          {!hasNFT && (
+            <div className="flex items-start justify-between mb-10">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">Get Verified</h2>
+                <p className="text-white/50 text-sm">Prove your student status privately</p>
               </div>
-            )}
-          </div>
-
-          {/* Progress Stepper - Liquid Flow Style */}
-          <div className="mb-10">
-            <div className="flex items-start">
-              {steps.map((step, index) => {
-                const isCompleted = index < currentStepIndex;
-                const isActive = index === currentStepIndex;
-                const showBar = index < steps.length - 1;
-                const barFilled = index < currentStepIndex;
-
-                return (
-                  <div key={step.id} className="flex items-start" style={{ flex: showBar ? 1 : 'none' }}>
-                    {/* Step Circle - Blob */}
-                    <div className="flex flex-col items-center" style={{ width: '48px' }}>
-                      <motion.div
-                        className="w-12 h-12 rounded-full flex items-center justify-center relative"
-                        style={{
-                          background: isCompleted || isActive
-                            ? 'linear-gradient(135deg, #7c3aed, #4c1d95)'
-                            : '#0a0a2e',
-                          border: !isCompleted && !isActive ? '2px solid rgba(255, 255, 255, 0.15)' : 'none',
-                          boxShadow: isActive ? '0 0 30px rgba(124, 58, 237, 0.5)' : 'none',
-                        }}
-                        animate={{
-                          scale: isActive ? [1, 1.05, 1] : 1,
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: isActive ? Infinity : 0,
-                          ease: "easeInOut"
-                        }}
-                      >
-                        {isCompleted ? (
-                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <span className={`text-sm font-bold ${isActive ? 'text-white' : 'text-white/30'}`}>
-                            {index + 1}
-                          </span>
-                        )}
-                      </motion.div>
-
-                      {/* Labels */}
-                      <div className="mt-3 text-center">
-                        <p className={`text-sm font-medium ${isCompleted ? 'text-[#c4b5fd]' : isActive ? 'text-white' : 'text-white/40'}`}>
-                          {step.label}
-                        </p>
-                        <p className="text-xs text-white/30 mt-0.5 hidden sm:block whitespace-nowrap">
-                          {step.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Connecting Bar - Liquid Flow */}
-                    {showBar && (
-                      <div
-                        className="flex-1 relative self-start"
-                        style={{ height: '48px', display: 'flex', alignItems: 'center' }}
-                      >
-                        {/* Bar background */}
-                        <div
-                          className="w-full h-1.5 rounded-full"
-                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                        />
-                        {/* Bar fill - liquid */}
-                        <motion.div
-                          className="absolute top-1/2 -translate-y-1/2 left-0 h-1.5 rounded-full"
-                          style={{
-                            background: 'linear-gradient(90deg, #7c3aed, #4c1d95)',
-                            boxShadow: '0 0 10px rgba(124, 58, 237, 0.3)'
-                          }}
-                          initial={{ width: '0%' }}
-                          animate={{ width: barFilled ? '100%' : '0%' }}
-                          transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
-                        />
-                      </div>
+              {/* Only show wallet address when connected - no duplicate connect button */}
+              {isConnected && (
+                <div className="flex items-center gap-3">
+                  <ConnectButton.Custom>
+                    {({ account }) => account && (
+                      <span className="px-4 py-2 rounded-xl text-sm font-medium text-[#06b6d4] bg-[#06b6d4]/10 border border-[#06b6d4]/20">
+                        {account.displayName}
+                      </span>
                     )}
-                  </div>
-                );
-              })}
+                  </ConnectButton.Custom>
+                  <button onClick={() => disconnect()} className="text-xs text-white/40 hover:text-red-400 transition-colors">
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
+          )}
+
+          {/* Progress Stepper - Liquid Flow Style - Only show when NOT already verified */}
+          {!hasNFT && (
+            <div className="mb-10">
+              <div className="flex items-start">
+                {steps.map((step, index) => {
+                  const isCompleted = index < currentStepIndex;
+                  const isActive = index === currentStepIndex;
+                  const showBar = index < steps.length - 1;
+                  const barFilled = index < currentStepIndex;
+
+                  return (
+                    <div key={step.id} className="flex items-start" style={{ flex: showBar ? 1 : 'none' }}>
+                      {/* Step Circle - Blob */}
+                      <div className="flex flex-col items-center" style={{ width: '48px' }}>
+                        <motion.div
+                          className="w-12 h-12 rounded-full flex items-center justify-center relative"
+                          style={{
+                            background: isCompleted || isActive
+                              ? 'linear-gradient(135deg, #7c3aed, #4c1d95)'
+                              : '#0a0a2e',
+                            border: !isCompleted && !isActive ? '2px solid rgba(255, 255, 255, 0.15)' : 'none',
+                            boxShadow: isActive ? '0 0 30px rgba(124, 58, 237, 0.5)' : 'none',
+                          }}
+                          animate={{
+                            scale: isActive ? [1, 1.05, 1] : 1,
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: isActive ? Infinity : 0,
+                            ease: "easeInOut"
+                          }}
+                        >
+                          {isCompleted ? (
+                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <span className={`text-sm font-bold ${isActive ? 'text-white' : 'text-white/30'}`}>
+                              {index + 1}
+                            </span>
+                          )}
+                        </motion.div>
+
+                        {/* Labels */}
+                        <div className="mt-3 text-center">
+                          <p className={`text-sm font-medium ${isCompleted ? 'text-[#c4b5fd]' : isActive ? 'text-white' : 'text-white/40'}`}>
+                            {step.label}
+                          </p>
+                          <p className="text-xs text-white/30 mt-0.5 hidden sm:block whitespace-nowrap">
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Connecting Bar - Liquid Flow */}
+                      {showBar && (
+                        <div
+                          className="flex-1 relative self-start"
+                          style={{ height: '48px', display: 'flex', alignItems: 'center' }}
+                        >
+                          {/* Bar background */}
+                          <div
+                            className="w-full h-1.5 rounded-full"
+                            style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                          />
+                          {/* Bar fill - liquid */}
+                          <motion.div
+                            className="absolute top-1/2 -translate-y-1/2 left-0 h-1.5 rounded-full"
+                            style={{
+                              background: 'linear-gradient(90deg, #7c3aed, #4c1d95)',
+                              boxShadow: '0 0 10px rgba(124, 58, 237, 0.3)'
+                            }}
+                            initial={{ width: '0%' }}
+                            animate={{ width: barFilled ? '100%' : '0%' }}
+                            transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Test Controls (Disabled) */}
           {isTestMode && (
@@ -245,7 +287,7 @@ export function VerificationCard() {
               <h3 className="text-xl font-bold text-white mb-2">Verification Complete</h3>
               <p className="text-white/60 mb-4">Your soulbound credential has been minted</p>
               {txHash && (
-                <Link href={`/blockexplorer/tx/${txHash}`} className="inline-flex items-center gap-2 text-sm text-[#c4b5fd] hover:text-white hover:underline transition-colors">
+                <Link href={`/blockexplorer/transaction/${txHash}`} className="inline-flex items-center gap-2 text-sm text-[#c4b5fd] hover:text-white hover:underline transition-colors">
                   View transaction →
                 </Link>
               )}

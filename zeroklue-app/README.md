@@ -1,80 +1,119 @@
-# 🏗 Scaffold-ETH 2
+# 🔐 ZeroKlue
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+**Privacy-preserving student/professional verification using Zero-Knowledge Proofs.**
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+Prove you belong to an organization (university, company) WITHOUT revealing your email address. Only your domain is verified on-chain.
 
-⚙️ Built using NextJS, RainbowKit, Foundry, Wagmi, Viem, and Typescript.
+---
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🪝 **[Custom hooks](https://docs.scaffoldeth.io/hooks/)**: Collection of React hooks wrapper around [wagmi](https://wagmi.sh/) to simplify interactions with smart contracts with typescript autocompletion.
-- 🧱 [**Components**](https://docs.scaffoldeth.io/components/): Collection of common web3 components to quickly build your frontend.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
+## 🎯 The Problem
 
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/b237af0c-5027-4849-a5c1-2e31495cccb1)
+- Students constantly reshare sensitive info (IDs, emails) to claim discounts
+- Companies sell student data; privacy is compromised
+- Verification is siloed - prove once per merchant
+- Identity fraud is easy (screenshot fake IDs)
 
-## Requirements
+## 💡 The Solution
 
-Before you begin, you need to install the following tools:
+**"Prove once, use everywhere, reveal nothing."**
 
-- [Node (>= v20.18.3)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
-- [Git](https://git-scm.com/downloads)
+1. **Zero-Knowledge**: Proves you belong to an organization without revealing WHO you are
+2. **Soulbound NFT**: One verification = permanent, portable credential
+3. **Privacy by Design**: Only domain is verified, never your email
+4. **Trustless**: Blockchain verification - merchants don't need to trust you
 
-## Quickstart
+---
 
-To get started with Scaffold-ETH 2, follow the steps below:
+## 🚀 Quick Start
 
-1. Install dependencies if it was skipped in CLI:
-
-```
-cd my-dapp-example
-yarn install
+```bash
+./start-demo.sh
 ```
 
-2. Run a local network in the first terminal:
+This will:
+1. Start local Anvil blockchain
+2. Deploy ZeroKlue contract
+3. Fund test accounts
+4. Start Next.js frontend at http://localhost:3000
+
+---
+
+## 📦 How It Works
 
 ```
-yarn chain
+┌──────────────────────────────────────────────────────────────────┐
+│  1. Connect Wallet (burner wallet, stored in localStorage)       │
+│  2. Sign in with Google Workspace account                        │
+│  3. ZK proof generated in browser (Noir circuit)                 │
+│  4. Proof verified client-side                                   │
+│  5. registerStudent(ephemeralPubkey) stores attestation on-chain │
+│  6. Merchants query isVerified(address) for instant verification │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-This command starts a local Ethereum network using Foundry. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `packages/foundry/foundry.toml`.
+---
 
-3. On a second terminal, deploy the test contract:
+## 🔧 Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Any Organization** | Works with ANY Google Workspace domain |
+| **Client-Side Proving** | All ZK cryptography in browser |
+| **Sybil Resistance** | Ephemeral keys prevent double-verification |
+| **Gas Efficient** | ~50k gas for attestation |
+| **Portable Credential** | Verify once, use across all merchants |
+
+---
+
+## 🏗️ Architecture
+
+- **Frontend**: Next.js + RainbowKit + Wagmi
+- **Smart Contract**: Solidity (Foundry)
+- **ZK Circuit**: Noir (noir-jwt)
+- **Proving**: Barretenberg (client-side)
+
+---
+
+## 📁 Project Structure
 
 ```
-yarn deploy
+zeroklue-app/
+├── packages/
+│   ├── foundry/
+│   │   ├── contracts/ZeroKlue.sol  # Main contract
+│   │   └── script/                 # Deploy scripts
+│   └── nextjs/
+│       ├── app/                    # Pages (verify, marketplace, merchant)
+│       ├── components/             # React components
+│       ├── hooks/                  # useStudentVerification, useStudentNFT
+│       └── lib/circuits/           # ZK proof generation
+└── packages/circuits/              # Noir circuit source
 ```
 
-This command deploys a test smart contract to the local network. The contract is located in `packages/foundry/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/foundry/script` to deploy the contract to the network. You can also customize the deploy script.
+---
 
-4. On a third terminal, start your NextJS app:
+## 🔒 Security Model
 
+- ZK proof verifies JWT signature without exposing email
+- Ephemeral keys bind proof to wallet (prevents replay)
+- Soulbound token (cannot transfer)
+- Client-side verification + on-chain attestation
+
+---
+
+## 🧪 Testing
+
+```bash
+cd zeroklue-app/packages/foundry
+forge test
 ```
-yarn start
-```
 
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
+---
 
-Run smart contract test with `yarn foundry:test`
+## 📄 License
 
-- Edit your smart contracts in `packages/foundry/contracts`
-- Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
-- Edit your deployment scripts in `packages/foundry/script`
+MIT
 
+---
 
-## Documentation
-
-Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
-
-To know more about its features, check out our [website](https://scaffoldeth.io).
-
-## Contributing to Scaffold-ETH 2
-
-We welcome contributions to Scaffold-ETH 2!
-
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+Built with ❤️ using [Scaffold-ETH 2](https://scaffoldeth.io) + [Noir](https://noir-lang.org)

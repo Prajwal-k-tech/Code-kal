@@ -25,14 +25,20 @@ const initialState: StudentVerificationState = {
 
 /**
  * Hook for student/professional verification flow
- * Handles: wallet check → ephemeral key → Google OAuth → ZK proof → contract call
+ * 
+ * NEW FLOW (Client-Side Verification):
+ * 1. Check wallet connection
+ * 2. Generate ephemeral key
+ * 3. Google OAuth + ZK proof generation in browser
+ * 4. Verify proof CLIENT-SIDE (BarretenbergVerifier)
+ * 5. If valid, call registerStudent(ephemeralPubkey) to store attestation
  */
 export function useStudentVerification() {
   const [state, setState] = useState<StudentVerificationState>(initialState);
   const { address, isConnected } = useAccount();
   const { data: zeroKlueContract } = useDeployedContractInfo("ZeroKlue");
 
-  const { writeContract, data: writeData } = useWriteContract();
+  const { writeContractAsync, data: writeData } = useWriteContract();
   const { isLoading: isTxPending, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
     hash: writeData,
   });
@@ -58,7 +64,7 @@ export function useStudentVerification() {
 
       setState(s => ({ ...s, progress: 30, status: "generating_proof" }));
 
-      // 3. Google OAuth + ZK proof generation
+      // 3. Google OAuth + ZK proof generation + CLIENT-SIDE VERIFICATION
       let result: GoogleVerificationResult;
       try {
         result = await verifyWithGoogle(ephemeralKey);
@@ -75,15 +81,31 @@ export function useStudentVerification() {
         progress: 70,
       }));
 
-      // 4. Submit to smart contract
+      // 4. Submit attestation to smart contract
       setState(s => ({ ...s, status: "submitting_tx", progress: 85 }));
 
-      writeContract({
-        address: zeroKlueContract.address,
-        abi: zeroKlueContract.abi,
-        functionName: "verifyAndMint",
-        args: [result.contractProof.proofHex, result.contractProof.publicInputs],
-      });
+      // Get ephemeral pubkey from the proof result
+      const ephemeralPubkey = result.contractProof.ephemeralPubkey as `0x${string}`;
+
+      console.log("[ZeroKlue] === CONTRACT CALL DEBUG ===");
+      console.log("[ZeroKlue] Contract address:", zeroKlueContract.address);
+      console.log("[ZeroKlue] Ephemeral pubkey:", ephemeralPubkey);
+      console.log("[ZeroKlue] Ephemeral pubkey length:", ephemeralPubkey.length);
+
+      try {
+        await writeContractAsync({
+          address: zeroKlueContract.address,
+          abi: zeroKlueContract.abi,
+          functionName: "registerStudent",
+          args: [ephemeralPubkey],
+        });
+        console.log("[ZeroKlue] Transaction submitted successfully!");
+      } catch (contractError: any) {
+        console.error("[ZeroKlue] CONTRACT CALL FAILED:", contractError);
+        console.error("[ZeroKlue] Error message:", contractError.message);
+        console.error("[ZeroKlue] Error shortMessage:", contractError.shortMessage);
+        throw contractError;
+      }
     } catch (err: any) {
       console.error("[ZeroKlue] Verification failed:", err);
       setState(s => ({
@@ -93,7 +115,7 @@ export function useStudentVerification() {
         progress: 0,
       }));
     }
-  }, [isConnected, address, zeroKlueContract, writeContract]);
+  }, [isConnected, address, zeroKlueContract, writeContractAsync]);
 
   useEffect(() => {
     if (!isTxSuccess) return;

@@ -93,15 +93,22 @@ export const generateProof = async (
 
   if (onProgress) onProgress({ stage: "proving", progress: 60, message: "Proving (identifying)..." });
 
-  const { proof, publicInputs } = await backend.generateProof(witness);
+  // Generate proof with keccak hash for EVM/Solidity verifier compatibility
+  // CRITICAL: The { keccak: true } option MUST match the --oracle_hash keccak used during VK generation
+  const { proof, publicInputs } = await backend.generateProof(witness, { keccak: true });
   const provingTime = performance.now() - startTime;
 
   console.log(`[ZeroKlue] Proof generated in ${(provingTime / 1000).toFixed(1)}s`);
+  console.log(`[ZeroKlue DEBUG] Raw proof type: ${typeof proof}`);
+  console.log(`[ZeroKlue DEBUG] Raw proof length (bytes): ${proof.length}`);
+  console.log(`[ZeroKlue DEBUG] Public inputs count: ${publicInputs.length}`);
+  console.log(`[ZeroKlue DEBUG] Public inputs (first 5):`, publicInputs.slice(0, 5));
+  console.log(`[ZeroKlue DEBUG] Public inputs (last 5):`, publicInputs.slice(-5));
 
   // Format for smart contract
   const proofHex = bytesToHex(proof) as `0x${string}`;
 
-  const formattedInputs = publicInputs.map(input => {
+  const formattedInputs = publicInputs.map((input: any) => {
     if (typeof input === "string") {
       return input.startsWith("0x") ? (input as `0x${string}`) : (`0x${input}` as `0x${string}`);
     }
