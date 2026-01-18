@@ -1,10 +1,10 @@
-# 📍 ZeroKlue Circuits
+# ZeroKlue Circuits
 
-> ⚠️ **Note:** This folder contains the original circuit plan. The actual circuit we use is pre-compiled from [StealthNote](https://github.com/saleel/stealthnote).
+> **Note:** This folder contains the Noir circuit source. The actual compiled circuit we use is pre-compiled from [StealthNote](https://github.com/saleel/stealthnote).
 
 ---
 
-## ✅ Where the Real Circuit Lives
+## Where the Compiled Circuit Lives
 
 ```
 zeroklue-app/packages/nextjs/public/circuits/
@@ -16,7 +16,7 @@ zeroklue-app/packages/nextjs/public/circuits/
 
 ---
 
-## 🔧 What the Circuit Proves
+## What the Circuit Proves
 
 | Claim | Method |
 |-------|--------|
@@ -27,7 +27,7 @@ zeroklue-app/packages/nextjs/public/circuits/
 
 ---
 
-## 📚 Resources
+## Resources
 
 - [StealthNote](https://github.com/saleel/stealthnote) - Source of the circuit
 - [noir-jwt](https://github.com/saleel/noir-jwt) - JWT verification in Noir
