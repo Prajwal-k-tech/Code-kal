@@ -108,7 +108,7 @@ forge test -vvv
 bool isStudent = zeroKlue.isVerified(walletAddress);
 if (isStudent) applyDiscount();
 ```
-
+ 
 ---
 
 ##  Privacy Guarantees
