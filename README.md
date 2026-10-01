@@ -1,140 +1,62 @@
 # ZeroKlue
 
-> **Verify once. Prove forever. Stay private.**
+ZeroKlue is a prototype for browser-based Google sign-in and JWT proof generation, paired with a Solidity contract that records a wallet verification flag. The current contract does not verify a proof: the frontend generates proof data but submits only an ephemeral public key to `registerStudent`, and the contract accepts any unused key. As implemented, an on-chain verified flag is not evidence that the wallet proved a university credential.
 
-ZeroKlue enables students to cryptographically prove their university status without revealing personal data. Built with Noir ZK circuits and verified on-chain.
+## What the Noir source specifies
 
----
+The checked-in source at `packages/circuits/src/main.nr` uses `noir-jwt` and specifies a circuit that:
 
-## Quick Start
+- verifies an RSA/SHA-256 signed JWT using the supplied public key and signature;
+- asserts that the JWT's `email_verified` claim is `true`;
+- checks that the email claim contains a supplied domain after `@`;
+- binds the JWT nonce to a Poseidon2 hash of an ephemeral public key, salt, and expiry value.
 
-### Prerequisites
+Signature verification uses the supplied public key; the statement alone does not establish that the key belongs to Google. A trusted-key binding must be enforced separately. This source does not assert JWT issuer, audience, or expiry claims, and does not prove the Google `hd` hosted-domain claim. It binds an expiry value into the nonce hash but does not check that the value is still in the future. The browser OAuth code checks for an `hd` value locally, but that local check is not part of the circuit statement. A hosted Google Workspace domain is not necessarily a university domain.
 
-> **Windows Users:** This project requires a Unix environment. Use [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install).
-> 
-> ```powershell
-> # In PowerShell (Admin)
-> wsl --install -d Ubuntu
-> # Then open Ubuntu from Start Menu and continue below 
-> ```
+There is also an artifact mismatch to resolve before describing the proof as implemented: `packages/circuits/README.md` says the shipped compiled circuit is precompiled from [StealthNote](https://github.com/saleel/stealthnote) and points to the artifacts in `zeroklue-app/packages/nextjs/public/circuits/`. It does not establish that the compiled artifact was built from the checked-in `main.nr`. Preserve this upstream attribution. The project also uses [`noir-jwt`](https://github.com/saleel/noir-jwt); it is not an original cryptographic construction.
 
-| Requirement | Install Command |
-|-------------|-----------------|
-| **Node.js 18+** | [nodejs.org](https://nodejs.org) or `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash - && sudo apt install -y nodejs` |
-| **Foundry** | `curl -L https://foundry.paradigm.xyz \| bash && foundryup` |
-| **Yarn** | `npm install -g yarn` |
+## Local development
 
-### Run the Demo
+The app workspace requires Node.js 20.18.3 or later and Yarn 3. The local chain flow also requires Foundry/Anvil. Google OAuth client configuration is required to use sign-in. The root package scripts are stale and refer to workspaces that are not present, so use the `zeroklue-app` workspace directly.
 
 ```bash
-# Clone and enter
 git clone https://github.com/Prajwal-k-tech/Code-kal.git
-cd Code-kal
-
-# One command to rule them all
-chmod +x start-demo.sh
-./start-demo.sh
+cd Code-kal/zeroklue-app
+yarn install
 ```
 
-This starts:
-1. Local Anvil blockchain
-2. Deploys ZeroKlue contracts
-3. Funds test wallets
-4. Opens http://localhost:3000
-
----
-
-## What is ZeroKlue?
-
-**The Problem**: Traditional verification services (SheerID, UNiDAYS) collect your personal data just to confirm you're a student. In Web3, this is even worse - associating your email with your wallet makes you a target.
-
-**Our Solution**: ZK proofs + Google OAuth. **No backend. No database. No data collection.**
-
-```
-Sign in with Google → ZK proof generated in browser → Submit to contract → Done
-```
-
----
-
-## Why Web3 Needs This
-
-1. **DAO Governance**: DAOs give away millions in grants. One person with 1,000 wallets can rig votes. ZeroKlue provides Sybil resistance without KYC.
-
-2. **Sybil-Resistant Airdrops**: Projects want to airdrop to future builders (students), not bot farms.
-
-3. **Token-Gated Communities**: University alumni groups, company channels - all verifiable without doxxing.
-
----
-
-## Project Structure
-
-```
-codekal/
-├── zeroklue-app/              # Main app (Scaffold-ETH 2)
-│   └── packages/
-│       ├── foundry/           # Smart contracts (ZeroKlue.sol)
-│       └── nextjs/            # Frontend (React + RainbowKit)
-├── packages/circuits/         # Noir ZK circuit source
-└── start-demo.sh              # One-click demo
-```
-
----
-
-## How It Works
-
-### For Students
-1. Connect wallet (MetaMask)
-2. Click "Verify with Google"
-3. Sign in with @university.edu
-4. Wait ~30s for ZK proof generation
-5. Soulbound NFT minted!
-
-### For Merchants/DAOs
-```solidity
-// Check if wallet is verified
-bool isStudent = zeroKlue.isVerified(walletAddress);
-if (isStudent) applyDiscount();
-```
-
----
-
-## Testing
+From `zeroklue-app`, start a local chain, deploy the configured contracts, and start the frontend in separate terminals:
 
 ```bash
-cd zeroklue-app/packages/foundry
-forge test -vvv
+yarn chain
 ```
 
-All 14 tests passing.
+```bash
+yarn deploy
+```
 
----
+```bash
+yarn start
+```
 
-## Privacy Guarantees
+Open [http://localhost:3000](http://localhost:3000). These commands follow the nested workspace scripts and were not run for this draft. The top-level `start-demo.sh` terminates existing Anvil and Next development processes before starting its demo flow; inspect it before use.
 
-- **Trustless**: Google signs JWT, we verify cryptographically
-- **Zero-Knowledge**: Merchants never see email/name/institution
-- **Soulbound**: NFT cannot be transferred
-- **Sybil Resistant**: Nullifiers prevent reuse of same email
+## Current contract behavior
 
----
+`ZeroKlue.sol` defines `registerStudent(bytes32 ephemeralPubkey)`. It records the caller, timestamp, and key after checking only that the key has not been used. The call accepts no proof or public inputs and invokes no verifier. The frontend submission paths generate proof data but pass only the ephemeral public key to this method. Therefore, a direct caller can set their wallet's `isVerified` flag with an arbitrary unused key. The one-use key check does not establish student status or Sybil resistance.
 
-## Technical Stack
+The browser receives the Google ID token and generates proof material client-side. The token and identity are handled in the browser flow, but this alone does not guarantee that identity is hidden from Google, browser extensions, or every application component. No end-to-end privacy or production security guarantee is claimed.
 
-| Layer | Technology |
-|-------|------------|
-| ZK Circuits | Noir 1.0.0-beta |
-| Proving Backend | Barretenberg (UltraHonk) |
-| Smart Contracts | Solidity 0.8.21 (Foundry) |
-| Frontend | Next.js 15 + RainbowKit + wagmi |
+## Limitations and attribution
 
----
+- The source-level JWT checks and the shipped compiled circuit have not been shown to match.
+- The generated proof is not submitted to or verified by the Solidity contract in the inspected flow.
+- The contract's wallet flag therefore must not be presented as a cryptographically verified credential.
+- No independent protocol audit or production deployment evidence is documented.
+- Application ideas such as airdrops, token-gated communities, or DAO Sybil resistance are not validated deployments.
 
-## Acknowledgments
+Upstream projects:
 
-- [StealthNote](https://github.com/saleel/stealthnote) - ZK circuit architecture (our circuit is adapted from their MIT-licensed JWT verification)
-- [noir-jwt](https://github.com/saleel/noir-jwt) - JWT verification in Noir
-- [Scaffold-ETH 2](https://scaffoldeth.io) - Frontend framework
-
----
-
-**Verify once. Prove forever. Stay private.**
+- [StealthNote](https://github.com/saleel/stealthnote), identified in the circuits README as the source of the shipped compiled circuit. Preserve this attribution and check the upstream license when redistributing.
+- [noir-jwt](https://github.com/saleel/noir-jwt), used by the checked-in Noir source.
+- [Scaffold-ETH 2](https://scaffoldeth.io/), used as the web app framework.
