@@ -30,8 +30,11 @@ const initialState: StudentVerificationState = {
  * 1. Check wallet connection
  * 2. Generate ephemeral key
  * 3. Google OAuth + ZK proof generation in browser
- * 4. Verify proof CLIENT-SIDE (BarretenbergVerifier)
- * 5. If valid, call registerStudent(ephemeralPubkey) to store attestation
+ * 4. Submit only the ephemeral public key to the contract
+ *
+ * The current hook does not verify the generated proof or submit it to the
+ * contract. The contract accepts any unused key, so success is not proof of
+ * student status.
  */
 export function useStudentVerification() {
   const [state, setState] = useState<StudentVerificationState>(initialState);
@@ -64,7 +67,7 @@ export function useStudentVerification() {
 
       setState(s => ({ ...s, progress: 30, status: "generating_proof" }));
 
-      // 3. Google OAuth + ZK proof generation + CLIENT-SIDE VERIFICATION
+      // 3. Google OAuth and ZK proof generation. This does not verify the proof.
       let result: GoogleVerificationResult;
       try {
         result = await verifyWithGoogle(ephemeralKey);
@@ -81,7 +84,7 @@ export function useStudentVerification() {
         progress: 70,
       }));
 
-      // 4. Submit attestation to smart contract
+      // 4. Submit the ephemeral key. The contract does not verify a proof.
       setState(s => ({ ...s, status: "submitting_tx", progress: 85 }));
 
       // Get ephemeral pubkey from the proof result

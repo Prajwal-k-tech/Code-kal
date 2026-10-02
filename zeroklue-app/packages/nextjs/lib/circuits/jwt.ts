@@ -16,7 +16,7 @@ export type ProofProgress = {
 };
 
 /**
- * Proof result formatted for the ZeroKlue smart contract
+ * Generated proof material. The current ZeroKlue contract does not accept it.
  */
 export interface ContractProof {
   /** Raw proof bytes as hex string (0x...) */
@@ -28,7 +28,7 @@ export interface ContractProof {
 }
 
 /**
- * Generate a ZK proof for student/professional verification
+ * Generate ZK proof material from the configured circuit artifact.
  */
 export const generateProof = async (
   credential: {

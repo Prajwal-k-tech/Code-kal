@@ -10,7 +10,7 @@ const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata = getMetadata({
   title: "ZeroKlue",
-  description: "Decentralized, Privacy-Safe Verification",
+  description: "Student credential proof-generation prototype; on-chain verification is not implemented.",
 });
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {

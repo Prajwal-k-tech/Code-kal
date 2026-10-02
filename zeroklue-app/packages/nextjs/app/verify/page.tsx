@@ -40,11 +40,10 @@ export default function VerifyPage() {
         {/* Header */}
         <div className="text-center mb-12 max-w-2xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Student Verification
+            Student Verification Prototype
           </h1>
           <p className="text-lg text-white/50">
-            Prove your academic status with zero-knowledge cryptography.
-            Your email stays private — only the domain is verified.
+            This demo generates proof material and records a wallet key. The contract does not verify the proof, so the record does not prove student status.
           </p>
         </div>
 

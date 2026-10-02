@@ -3,12 +3,12 @@ import { EphemeralKey } from "../types";
 import { pubkeyModulusFromJWK } from "../utils";
 
 /**
- * Google OAuth provider for ZeroKlue student verification
- * Verifies user belongs to a Google Workspace domain (e.g., university.edu)
+ * Google OAuth and proof-generation flow for the ZeroKlue prototype.
+ * The hosted-domain claim is checked in browser code, not proven on-chain.
  */
 
 export interface GoogleVerificationResult {
-  /** Proof data formatted for ZeroKlue contract */
+  /** Generated proof material; the current ZeroKlue contract does not accept it */
   contractProof: ContractProof;
   /** The verified domain (e.g., "university.edu") */
   domain: string;
@@ -19,9 +19,9 @@ export interface GoogleVerificationResult {
 }
 
 /**
- * Complete verification flow: OAuth → JWT → ZK Proof
+ * Prototype flow: OAuth → JWT → generated ZK proof material
  * @param ephemeralKey - Generated ephemeral key to bind proof to wallet
- * @returns Proof data ready for the ZeroKlue smart contract
+ * @returns OAuth data and generated proof material; no on-chain proof verification occurs
  */
 export async function verifyWithGoogle(ephemeralKey: EphemeralKey): Promise<GoogleVerificationResult> {
   // Load Google OAuth script

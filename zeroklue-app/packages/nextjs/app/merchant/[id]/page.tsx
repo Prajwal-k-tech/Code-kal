@@ -196,8 +196,8 @@ export default function MerchantCheckoutPage() {
                        <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex flex-col items-center text-center gap-2 animate-pulse">
                           <CheckCircleIcon className="w-8 h-8 text-green-400" />
                           <div>
-                             <div className="font-bold text-green-400 text-sm">Student Verified!</div>
-                             <div className="text-xs text-green-300/70">100% Discount Applied</div>
+                             <div className="font-bold text-green-400 text-sm">Prototype Flow Completed</div>
+                             <div className="text-xs text-green-300/70">Demo state only; student status is not verified.</div>
                           </div>
                        </div>
                     )}

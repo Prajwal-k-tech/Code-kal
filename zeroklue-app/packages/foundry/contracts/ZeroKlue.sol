@@ -5,11 +5,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title ZeroKlue Student Verification (Simplified)
- * @notice Client-side ZK verification with on-chain attestation
- * @dev Proof verification happens client-side. This contract stores attestations.
- * 
- * SECURITY NOTE: This version trusts client-side verification.
- * For production, implement on-chain verification with HonkVerifier.
+ * @notice Prototype registry for wallet addresses and caller-supplied keys
+ * @dev This contract does not receive or verify a credential proof. A caller can
+ *      register any unused key, so the stored flag is not evidence of student status.
  */
 contract ZeroKlue is Ownable {
     // ============ State Variables ============
@@ -49,14 +47,10 @@ contract ZeroKlue is Ownable {
     // ============ Core Functions ============
 
     /**
-     * @notice Register student verification (called after client-side proof verification)
-     * @param ephemeralPubkey The ephemeral public key from the ZK proof
-     * 
-     * FLOW:
-     * 1. User generates ZK proof in browser
-     * 2. Browser verifies proof with BarretenbergVerifier
-     * 3. If valid, browser calls this function with the ephemeral pubkey
-     * 4. Contract stores the verification attestation
+     * @notice Register a caller-supplied key for this wallet
+     * @dev No proof is passed or verified. This function must not be used as
+     *      proof of a verified student credential.
+     * @param ephemeralPubkey An unused key selected by the caller
      */
     function registerStudent(bytes32 ephemeralPubkey) external {
         // 1. Check ephemeral key not already used

@@ -21,7 +21,7 @@ export function VerificationCard() {
   const { disconnect } = useDisconnect();
   const { verify, reset, status, error, domain, txHash, progress, isLoading } = useStudentVerification();
 
-  // Check if already verified on-chain
+  // Check whether the wallet has a prototype registry entry.
   const { hasNFT, isLoading: nftLoading, verifiedAt } = useStudentNFT();
 
   // Redirect on success state
@@ -30,9 +30,9 @@ export function VerificationCard() {
   useEffect(() => {
     if (status === "success" && !redirecting) {
       setRedirecting(true);
-      // Wait 2 seconds to show "Completed" then redirect
+      // Wait briefly to show the registry confirmation before redirecting.
       const timeout = setTimeout(() => {
-        router.push("/marketplace?verified=true");
+        router.push("/marketplace");
       }, 2000);
       return () => clearTimeout(timeout);
     }
@@ -47,7 +47,7 @@ export function VerificationCard() {
       { id: "wallet", label: "Connect", description: "Link your wallet" },
       { id: "oauth", label: "Authenticate", description: "Sign in with Google" },
       { id: "proof", label: "Generate", description: "ZK proof creation" },
-      { id: "mint", label: "Mint", description: "Soulbound NFT" },
+      { id: "mint", label: "Record", description: "Store wallet key" },
     ],
     [],
   );
@@ -88,7 +88,7 @@ export function VerificationCard() {
         />
 
         <div className="relative z-10 p-8">
-          {/* Already Verified State */}
+          {/* Existing registry entry */}
           {hasNFT && !nftLoading && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -105,11 +105,11 @@ export function VerificationCard() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </motion.div>
-              <h3 className="text-2xl font-bold text-white mb-2">Already Verified!</h3>
-              <p className="text-white/60 mb-2">Your student credential is active on-chain</p>
+              <h3 className="text-2xl font-bold text-white mb-2">Registry Entry Found</h3>
+              <p className="text-white/60 mb-2">This prototype record does not verify student status.</p>
               {verifiedAt && (
                 <p className="text-white/40 text-sm mb-6">
-                  Verified: {new Date(Number(verifiedAt) * 1000).toLocaleDateString()}
+                  Recorded: {new Date(Number(verifiedAt) * 1000).toLocaleDateString()}
                 </p>
               )}
               <Link
@@ -122,12 +122,12 @@ export function VerificationCard() {
             </motion.div>
           )}
 
-          {/* Header - Only show when NOT already verified */}
+          {/* Header - Only show without an existing registry entry */}
           {!hasNFT && (
             <div className="flex items-start justify-between mb-10">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-1">Get Verified</h2>
-                <p className="text-white/50 text-sm">Prove your student status privately</p>
+                <h2 className="text-2xl font-bold text-white mb-1">Prototype Registry</h2>
+                <p className="text-white/50 text-sm">This flow does not verify student status.</p>
               </div>
               {/* Only show wallet address when connected - no duplicate connect button */}
               {isConnected && (
@@ -147,7 +147,7 @@ export function VerificationCard() {
             </div>
           )}
 
-          {/* Progress Stepper - Liquid Flow Style - Only show when NOT already verified */}
+          {/* Progress Stepper - only show without an existing registry entry */}
           {!hasNFT && (
             <div className="mb-10">
               <div className="flex items-start">
@@ -284,8 +284,8 @@ export function VerificationCard() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </motion.div>
-              <h3 className="text-xl font-bold text-white mb-2">Verification Complete</h3>
-              <p className="text-white/60 mb-4">Your soulbound credential has been minted</p>
+              <h3 className="text-xl font-bold text-white mb-2">Registry Entry Recorded</h3>
+              <p className="text-white/60 mb-4">The contract stored a wallet key. It did not verify a student credential.</p>
               {txHash && (
                 <Link href={`/blockexplorer/transaction/${txHash}`} className="inline-flex items-center gap-2 text-sm text-[#c4b5fd] hover:text-white hover:underline transition-colors">
                   View transaction →
@@ -339,7 +339,7 @@ export function VerificationCard() {
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
-                    Completed — Redirecting...
+                    Record saved — Redirecting...
                   </span>
                 </motion.button>
               ) : (
@@ -363,7 +363,7 @@ export function VerificationCard() {
                       Processing...
                     </span>
                   ) : (
-                    "Verify with Google"
+                    "Run prototype flow"
                   )}
                 </motion.button>
               )}

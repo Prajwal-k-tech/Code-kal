@@ -20,20 +20,20 @@ export const Features = () => {
 
                     <FeatureCard
                         icon={<ShieldCheckIcon className="w-6 h-6" />}
-                        title="Privacy First"
-                        description="Share your status without revealing your sensitive personal data. Pure cryptographic proof."
+                        title="Proof Generation Prototype"
+                        description="The browser can generate proof material, but the current contract does not verify it or establish student status."
                     />
 
                     <FeatureCard
                         icon={<CubeTransparentIcon className="w-6 h-6" />}
-                        title="Interoperable"
-                        description="One digital identity for every campus, library, and student discount provider globally."
+                        title="On-Chain Registry"
+                        description="The contract stores wallet keys and timestamps. It is a prototype and is not connected to real student-benefit providers."
                     />
 
                     <FeatureCard
                         icon={<KeyIcon className="w-6 h-6" />}
-                        title="Self-Sovereign"
-                        description="You own your credentials. No central authority can revoke your digital accomplishments."
+                        title="Development Status"
+                        description="JWT source, shipped circuit artifacts, and contract verification are not yet connected as a complete credential-verification flow."
                     />
 
                 </div>

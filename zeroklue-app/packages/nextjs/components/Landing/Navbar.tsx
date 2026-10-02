@@ -45,7 +45,7 @@ export const Navbar = () => {
                                             href="/verify"
                                             className="btn bg-pink-500 hover:bg-pink-600 text-white border-none rounded-full px-6 font-bold"
                                         >
-                                            Get Verified
+                                            View Prototype
                                         </Link>
                                     </div>
                                 )}

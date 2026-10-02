@@ -21,37 +21,37 @@ export const Hero = () => {
                         </div>
 
                         <h1 className="text-6xl lg:text-8xl font-black text-white leading-tight mb-8">
-                            DECENTRALIZED,<br />
-                            PRIVACY-SAFE<br />
-                            VERIFICATION<span className="text-pink-400">*</span>
+                            STUDENT STATUS<br />
+                            PROOF GENERATION<br />
+                            PROTOTYPE
                         </h1>
 
                         {/* Upcoming Integration Card (Absolute/Floating style in original, inline here for mobile responsiveness) */}
                         <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 max-w-sm mt-12 hover:bg-white/15 transition-all cursor-pointer group">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold text-gray-300 uppercase tracking-wide">Upcoming Integration</span>
+                                <span className="text-xs font-bold text-gray-300 uppercase tracking-wide">Project Status</span>
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-2xl">🏛️</div>
                                 <div>
-                                    <h3 className="text-white font-bold text-lg leading-none">EDU-CHAIN</h3>
-                                    <p className="text-gray-300 text-sm">GLOBAL NETWORK</p>
+                                    <h3 className="text-white font-bold text-lg leading-none">PROTOTYPE</h3>
+                                    <p className="text-gray-300 text-sm">NOT FOR CREDENTIAL CHECKS</p>
                                 </div>
                                 <ArrowRightIcon className="w-5 h-5 text-gray-400 group-hover:text-white ml-auto" />
                             </div>
-                            <div className="mt-3 text-pink-400 text-xs font-bold uppercase">Launching October 2026</div>
+                            <div className="mt-3 text-pink-400 text-xs font-bold uppercase">Proof is not verified by the contract</div>
                         </div>
                     </div>
 
                     {/* Right Content */}
                     <div className="flex-1 lg:pl-12 flex flex-col justify-center">
                         <p className="text-xl text-gray-200 mb-8 leading-relaxed">
-                            A live experience that brings together professional designers, the brightest creative minds, and the most innovative brands using zero-knowledge technology.
+                            ZeroKlue is a student-status proof-generation prototype. The current contract stores a caller-supplied key without verifying a proof, so its registry flag does not establish student status.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Link href="/verify" className="btn bg-pink-500 hover:bg-pink-600 text-white border-none rounded-lg px-8 py-4 h-auto text-lg font-bold flex items-center gap-2">
-                                GET VERIFIED
+                                VIEW PROTOTYPE
                                 <CheckBadgeIcon className="w-6 h-6" />
                             </Link>
                             <Link href="#" className="btn bg-white/10 hover:bg-white/20 text-white border-none rounded-lg px-8 py-4 h-auto text-lg font-bold">

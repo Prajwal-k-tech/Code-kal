@@ -6,7 +6,8 @@ import { type ProofProgress, formatProofForContract, generateProof } from "~~/li
 
 /**
  * Proof generation modal
- * Shows progress of ZK proof generation and NFT minting
+ * Shows progress of ZK proof generation and prototype registry submission.
+ * The contract does not verify the generated proof.
  *
  * @owner Frontend Dev 2
  *
@@ -56,10 +57,10 @@ export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
       setProgress({
         stage: "proving",
         progress: 90,
-        message: "Submitting to blockchain...",
+        message: "Recording a key on-chain; the proof is not checked...",
       });
 
-      const { proof, publicInputs } = formatProofForContract(proofResult);
+      const { publicInputs } = formatProofForContract(proofResult);
 
       // Use registerStudent with ephemeral pubkey (index 83)
       const ephemeralPubkey = publicInputs[83] as `0x${string}`;
@@ -73,7 +74,7 @@ export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
       setProgress({
         stage: "done",
         progress: 100,
-        message: "NFT minted successfully!",
+        message: "Registry entry recorded. The contract did not verify the proof.",
       });
 
       // Reload page after 2 seconds to show unlocked offers
