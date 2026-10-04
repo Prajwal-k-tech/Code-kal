@@ -1,6 +1,5 @@
 import { ContractProof, JWTCircuitHelper } from "../circuits/jwt";
 import { EphemeralKey } from "../types";
-import { pubkeyModulusFromJWK } from "../utils";
 
 /**
  * Google OAuth and proof-generation flow for the ZeroKlue prototype.
@@ -123,7 +122,7 @@ async function signInWithGoogle({ nonce }: { nonce: string }): Promise<string> {
   try {
     // Try One Tap first (less intrusive)
     return await signInWithGoogleOneTap({ nonce, clientId });
-  } catch (error) {
+  } catch {
     console.log("[ZeroKlue] One Tap failed, using popup method");
     return signInWithGooglePopup({ nonce, clientId });
   }

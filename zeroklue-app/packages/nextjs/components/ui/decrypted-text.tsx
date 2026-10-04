@@ -35,7 +35,6 @@ export default function DecryptedText({
     sequential = true, // Reveal characters sequentially (true) or all at once (false)
 }: DecryptedTextProps) {
     const [displayText, setDisplayText] = useState(text);
-    const [isHovering, setIsHovering] = useState(false);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // Calculate how many times each character should change
@@ -47,26 +46,33 @@ export default function DecryptedText({
         let iteration = 0;
 
         intervalRef.current = setInterval(() => {
-            setDisplayText((prev) =>
+            setDisplayText(
                 text
                     .split("")
                     .map((char, index) => {
                         if (char === " " || char === "\n") return char;
 
-                        // reveal logic based on iteration and index
-                        // If sequential is true, we reveal from left to right gradually
-                        // 3 is a magic number to make the "wave" slower than the character cycling
-                        if (index < iteration / 3) {
+                        const revealIndex =
+                            revealDirection === "end"
+                                ? text.length - index - 1
+                                : revealDirection === "center"
+                                  ? Math.abs(index - (text.length - 1) / 2)
+                                  : index;
+                        const isRevealed = sequential
+                            ? revealIndex < iteration / 3
+                            : iteration >= maxIterations;
+                        if (isRevealed) {
                             return text[index];
                         }
 
-                        // Otherwise show random char
-                        return characters[Math.floor(Math.random() * characters.length)];
+                        const randomCharacters = useOriginalCharsOnly ? text : characters;
+                        return randomCharacters[Math.floor(Math.random() * randomCharacters.length)];
                     })
                     .join("")
             );
 
-            if (iteration >= text.length * 3 + maxIterations) { // Ensure enough iterations for full reveal
+            const completionIteration = sequential ? text.length * 3 + maxIterations : maxIterations;
+            if (iteration >= completionIteration) {
                 if (intervalRef.current) clearInterval(intervalRef.current);
                 setDisplayText(text); // Ensure final state is correct
             }
@@ -81,24 +87,18 @@ export default function DecryptedText({
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
         }
-    }, [text, speed, maxIterations]); // Re-run if text changes
+    }, [text, speed, maxIterations, revealDirection, useOriginalCharsOnly, characters, sequential]);
 
     const handleMouseEnter = () => {
         if (animateOnHover) {
             startAnimation();
-            setIsHovering(true);
         }
     };
-
-    const handleMouseLeave = () => {
-        setIsHovering(false);
-    }
 
     return (
         <span
             className={parentClassName}
             onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
         >
             <span className={className}>{displayText}</span>
         </span>

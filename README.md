@@ -17,29 +17,41 @@ There is also an artifact mismatch to resolve before describing the proof as imp
 
 ## Local development
 
-The app workspace requires Node.js 20.18.3 or later and Yarn 3. The local chain flow also requires Foundry/Anvil. Google OAuth client configuration is required to use sign-in. The root package scripts are stale and refer to workspaces that are not present, so use the `zeroklue-app` workspace directly.
+The app workspace requires Node.js 20.18.3 or later and its checked-in Yarn 3.2.3 release. The local chain flow also requires Foundry/Anvil. Google OAuth client configuration is required to use sign-in. Root `npm run` shortcuts delegate to the actual nested workspace.
 
 ```bash
 git clone https://github.com/Prajwal-k-tech/Code-kal.git
 cd Code-kal/zeroklue-app
-yarn install
+node .yarn/releases/yarn-3.2.3.cjs install --immutable
 ```
+
+From the repository root, `npm run dev`, `npm run build`, `npm run start`,
+`npm run lint`, and `npm run typecheck` forward to the real nested workspace.
+`npm run contracts:test` requires Foundry and runs its Solidity tests.
 
 From `zeroklue-app`, start a local chain, deploy the configured contracts, and start the frontend in separate terminals:
 
 ```bash
-yarn chain
+node .yarn/releases/yarn-3.2.3.cjs chain
 ```
 
 ```bash
-yarn deploy
+node .yarn/releases/yarn-3.2.3.cjs deploy
 ```
 
 ```bash
-yarn start
+node .yarn/releases/yarn-3.2.3.cjs start
 ```
 
-Open [http://localhost:3000](http://localhost:3000). These commands follow the nested workspace scripts and were not run for this draft. The top-level `start-demo.sh` terminates existing Anvil and Next development processes before starting its demo flow; inspect it before use.
+Open [http://localhost:3000](http://localhost:3000). On Node.js 26.8.1, the
+Next.js production build, lint and TypeScript check pass; the production server
+returned HTTP 200 for `/`, `/verify`, `/marketplace` and `/merchant`. Dependency
+installation completed with warnings because the optional `sharp` native build
+failed on this host. The Anvil deployment and browser OAuth/proof-generation flow
+have not been verified end to end. The contract does not check the generated
+proof; the app labels its on-chain entry as a prototype record rather than a
+verified student credential. Foundry tests were not run because Foundry was not
+installed on the validation host.
 
 ## Current contract behavior
 

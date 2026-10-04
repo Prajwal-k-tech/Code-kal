@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { CheckCircleIcon, ArrowLeftIcon, StarIcon, PlayCircleIcon, DocumentTextIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { useStudentNFT } from "~~/hooks/scaffold-eth/useStudentNFT";
@@ -13,8 +12,6 @@ export default function MerchantPage() {
   const { hasNFT, isLoading, isConnected } = useStudentNFT();
 
   const coursePrice = 1299.00;
-  const discountAmount = 1299.00; // 100% OFF
-  const finalPrice = hasNFT ? 0 : coursePrice;
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-200 font-sans selection:bg-blue-500/30 selection:text-blue-200">

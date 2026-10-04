@@ -12,17 +12,6 @@ type ZeroKlueWidgetProps = {
 export default function ZeroKlueWidget({ onVerifySuccess, partnerName }: ZeroKlueWidgetProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Mock data for the modal (offer ID doesn't matter much here since we just want the flow)
-  const mockOffer = {
-    id: "widget-flow",
-    partnerName: partnerName,
-    description: "Prototype registry submission",
-    discount: "50% OFF",
-    logo: "", // Not needed for modal logic
-    category: "Software" as const,
-    bgColor: "bg-blue-600"
-  };
-
   const handleVerificationComplete = () => {
     setIsModalOpen(false);
     onVerifySuccess();
@@ -48,7 +37,7 @@ export default function ZeroKlueWidget({ onVerifySuccess, partnerName }: ZeroKlu
           onClick={() => setIsModalOpen(true)}
           className="bg-white text-[#0a0a2e] text-xs font-bold px-3 py-2 rounded-md hover:bg-cyan-50 transition-colors shadow-sm"
         >
-          Run Prototype
+          Run {partnerName} prototype
         </button>
       </div>
 

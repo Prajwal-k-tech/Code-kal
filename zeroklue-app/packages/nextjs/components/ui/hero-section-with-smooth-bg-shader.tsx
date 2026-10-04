@@ -2,7 +2,7 @@
 
 import { MeshGradient } from "@paper-design/shaders-react"
 import { useEffect, useState } from "react"
-import { ArrowRightIcon, CheckBadgeIcon } from "@heroicons/react/24/solid";
+import { CheckBadgeIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import DecryptedText from "./decrypted-text";
 
@@ -96,18 +96,24 @@ export function HeroSection({
                             className={`font-black text-white text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] leading-[0.9] tracking-tight ${titleClassName}`}
                             style={{ fontFamily, fontWeight }}
                         >
-                            DECENTRALIZED,<br />
-                            <span className="flex items-center gap-2">
-                                <DecryptedText
-                                    text="PRIVACY-SAFE"
-                                    speed={40}
-                                    maxIterations={8}
-                                    className="text-white"
-                                    animateOnHover={false}
-                                    sequential={true}
-                                    revealDirection="start"
-                                />
-                            </span>
+                            {title.split("\n").map((line, index) => (
+                                <span key={`${line}-${index}`}>
+                                    {index > 0 && <br />}
+                                    {index === 1 ? (
+                                        <span className="flex items-center gap-2">
+                                            <DecryptedText
+                                                text={line}
+                                                speed={40}
+                                                maxIterations={8}
+                                                className="text-white"
+                                                animateOnHover={false}
+                                                sequential
+                                                revealDirection="start"
+                                            />
+                                        </span>
+                                    ) : line}
+                                </span>
+                            ))}
                             <span className="text-pink-400">{highlightText}*</span>
                         </h1>
                     </div>
@@ -118,7 +124,7 @@ export function HeroSection({
                             {description}
                         </p>
                         <div className="flex flex-wrap gap-3">
-                            <Link href="/verify" className={`btn bg-pink-500 hover:bg-pink-600 text-white border-none rounded-lg px-6 py-3 h-auto text-base font-bold flex items-center gap-2 shadow-lg shadow-pink-500/25 transition-all hover:shadow-pink-500/40 hover:scale-[1.02] ${buttonClassName}`}>
+                            <Link href="/verify" onClick={onButtonClick} className={`btn bg-pink-500 hover:bg-pink-600 text-white border-none rounded-lg px-6 py-3 h-auto text-base font-bold flex items-center gap-2 shadow-lg shadow-pink-500/25 transition-all hover:shadow-pink-500/40 hover:scale-[1.02] ${buttonClassName}`}>
                                 {buttonText}
                                 <CheckBadgeIcon className="w-5 h-5" />
                             </Link>

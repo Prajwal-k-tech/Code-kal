@@ -31,8 +31,6 @@ export default function MerchantCheckoutPage() {
   }
 
   const coursePrice = 1299.00;
-  const discountAmount = 1299.00; // 100% OFF for demo or calculate based on offer
-  const finalPrice = discountApplied ? 0 : coursePrice;
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-200 font-sans selection:bg-blue-500/30 selection:text-blue-200">

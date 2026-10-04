@@ -39,7 +39,6 @@ export function VerificationCard() {
   }, [status, redirecting, router]);
 
   // Test mode - for previewing the stepper animation
-  const [testStep, setTestStep] = useState(0);
   const isTestMode = false; // Set to true to test animation with buttons
 
   const steps: Step[] = useMemo(

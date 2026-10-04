@@ -1,147 +1,84 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { type ProofProgress, formatProofForContract, generateProof } from "~~/lib/noir";
-
-/**
- * Proof generation modal
- * Shows progress of ZK proof generation and prototype registry submission.
- * The contract does not verify the generated proof.
- *
- * @owner Frontend Dev 2
- *
- * TODO:
- * - Add better error handling
- * - Add retry functionality
- * - Add cancel functionality
- */
+import { useEffect, useRef } from "react";
+import Link from "next/link";
+import { useStudentVerification } from "~~/hooks/useStudentVerification";
 
 interface ProofModalProps {
   onClose: () => void;
   onSuccess?: () => void;
 }
 
+/**
+ * Runs the same OAuth and browser proof-generation flow as the verification
+ * page. The current contract stores a demo key and does not verify the proof.
+ */
 export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
-  const [progress, setProgress] = useState<ProofProgress>({
-    stage: "loading",
-    progress: 0,
-    message: "Initializing...",
-  });
-  const [error, setError] = useState("");
-  const [txHash, setTxHash] = useState("");
-
-  const { writeContractAsync } = useScaffoldWriteContract({
-    contractName: "ZeroKlue",
-  });
+  const { verify, status, error, domain, txHash, progress, isLoading } = useStudentVerification();
+  const onSuccessRef = useRef(onSuccess);
+  onSuccessRef.current = onSuccess;
 
   useEffect(() => {
-    startProofGeneration();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (status !== "success" || !onSuccessRef.current) return;
+    const timeout = window.setTimeout(() => onSuccessRef.current?.(), 1500);
+    return () => window.clearTimeout(timeout);
+  }, [status]);
 
-  const startProofGeneration = async () => {
-    try {
-      // Get credential from localStorage
-      const credentialStr = localStorage.getItem("zeroklue_credential");
-      if (!credentialStr) {
-        setError("No credential found. Please verify your email first.");
-        return;
-      }
-
-      const credential = JSON.parse(credentialStr);
-
-      // Generate ZK proof
-      const proofResult = await generateProof(credential, setProgress);
-
-      // Submit to contract
-      setProgress({
-        stage: "proving",
-        progress: 90,
-        message: "Recording a key on-chain; the proof is not checked...",
-      });
-
-      const { publicInputs } = formatProofForContract(proofResult);
-
-      // Use registerStudent with ephemeral pubkey (index 83)
-      const ephemeralPubkey = publicInputs[83] as `0x${string}`;
-
-      const hash = await writeContractAsync({
-        functionName: "registerStudent",
-        args: [ephemeralPubkey],
-      });
-
-      if (hash) setTxHash(hash);
-      setProgress({
-        stage: "done",
-        progress: 100,
-        message: "Registry entry recorded. The contract did not verify the proof.",
-      });
-
-      // Reload page after 2 seconds to show unlocked offers
-      setTimeout(() => {
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          window.location.reload();
-        }
-      }, 2000);
-    } catch (err) {
-      console.error("Proof generation failed:", err);
-      setError(err instanceof Error ? err.message : "Unknown error");
-    }
-  };
+  const stage =
+    status === "authenticating"
+      ? "Sign in with Google"
+      : status === "generating_proof"
+        ? "Generate proof in this browser"
+        : status === "submitting_tx"
+          ? "Record a demo key on-chain"
+          : status === "success"
+            ? "Demo record saved"
+            : status === "error"
+              ? "Could not finish the prototype"
+              : "Connect a wallet to begin";
 
   return (
-    <div className="modal modal-open">
+    <div className="modal modal-open" role="dialog" aria-modal="true" aria-labelledby="proof-modal-title">
       <div className="modal-box">
-        <h3 className="font-bold text-lg">Generating Your Proof</h3>
+        <h3 id="proof-modal-title" className="font-bold text-lg">
+          Run the ZeroKlue prototype
+        </h3>
+
+        <div className="alert alert-warning mt-4">
+          <span>
+            The browser generates proof material, but the contract does not verify it. A recorded key is not proof of
+            student status.
+          </span>
+        </div>
 
         <div className="py-6">
           {error ? (
-            <div className="alert alert-error">
+            <div className="alert alert-error" role="alert">
               <span>{error}</span>
             </div>
           ) : (
             <>
-              {/* Progress bar */}
-              <div className="w-full bg-base-300 rounded-full h-4 mb-4">
+              <div className="w-full bg-base-300 rounded-full h-3 mb-4" aria-label={`Progress ${progress}%`}>
                 <div
-                  className="bg-primary h-4 rounded-full transition-all duration-500"
-                  style={{ width: `${progress.progress}%` }}
+                  className="bg-primary h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%` }}
                 />
               </div>
 
-              {/* Stage indicators */}
-              <div className="flex justify-between text-sm mb-4">
-                <span className={progress.stage === "loading" ? "text-primary font-bold" : ""}>
-                  {progress.stage === "loading" ? "→" : "✓"} Loading
-                </span>
-                <span className={progress.stage === "witness" ? "text-primary font-bold" : ""}>
-                  {["witness", "proving", "done"].includes(progress.stage) ? "✓" : "○"} Witness
-                </span>
-                <span className={progress.stage === "proving" ? "text-primary font-bold" : ""}>
-                  {["proving", "done"].includes(progress.stage) ? "✓" : "○"} Proving
-                </span>
-                <span className={progress.stage === "done" ? "text-primary font-bold" : ""}>
-                  {progress.stage === "done" ? "✓" : "○"} Done
-                </span>
-              </div>
-
-              <p className="text-center text-base-content/60">{progress.message}</p>
-
-              {progress.stage !== "done" && (
-                <p className="text-center text-sm text-base-content/40 mt-2">This takes about 15 seconds...</p>
+              <p className="text-center font-medium" role="status" aria-live="polite">
+                {stage}
+              </p>
+              {domain && <p className="text-center text-sm text-base-content/60 mt-1">Workspace domain: {domain}</p>}
+              {status === "submitting_tx" && (
+                <p className="text-center text-sm text-base-content/60 mt-2">
+                  The transaction only records a key; it does not submit or verify the proof.
+                </p>
               )}
-
               {txHash && (
                 <div className="mt-4 text-center">
-                  <p className="text-success font-medium">🎉 Success!</p>
-                  <a
-                    href={`/blockexplorer/transaction/${txHash}`}
-                    className="link link-primary text-sm"
-                  >
+                  <Link href={`/blockexplorer/transaction/${txHash}`} className="link link-primary text-sm">
                     View transaction
-                  </a>
+                  </Link>
                 </div>
               )}
             </>
@@ -149,13 +86,27 @@ export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
         </div>
 
         <div className="modal-action">
-          {(error || progress.stage === "done") && (
-            <button className="btn" onClick={onClose}>
-              {progress.stage === "done" ? "Close" : "Try Again"}
+          {status === "idle" || status === "error" ? (
+            <button className="btn btn-primary" onClick={() => void verify()}>
+              {status === "error" ? "Try again" : "Connect and run prototype"}
+            </button>
+          ) : status === "success" ? (
+            <button className="btn btn-primary" onClick={onClose}>
+              Close
+            </button>
+          ) : (
+            <button className="btn" onClick={onClose} disabled={isLoading}>
+              Close
+            </button>
+          )}
+          {status !== "success" && (
+            <button className="btn btn-ghost" onClick={onClose} disabled={isLoading}>
+              Cancel
             </button>
           )}
         </div>
       </div>
+      <button className="modal-backdrop" aria-label="Close prototype dialog" onClick={onClose} disabled={isLoading} />
     </div>
   );
 }

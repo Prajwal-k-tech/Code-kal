@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Offer } from "../data/offers";
 import { OfferCard } from "./OfferCard";
-import { motion, Variants, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
+import { motion, type Variants, useScroll, useMotionValueEvent } from "framer-motion";
 
 interface OfferStackProps {
   offers: Offer[];

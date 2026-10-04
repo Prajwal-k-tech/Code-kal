@@ -1,4 +1,4 @@
-import { initProver, initVerifier } from "../lazy-modules";
+import { initProver } from "../lazy-modules";
 import { EphemeralKey } from "../types";
 import { bytesToHex } from "../utils";
 import { type CompiledCircuit, InputMap } from "@noir-lang/noir_js";

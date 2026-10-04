@@ -14,7 +14,7 @@ export const Loader = () => {
 
         // Simulate initial loading delay before text cycles
         const interval = setInterval(() => {
-            setText(prev =>
+            setText(
                 targetText
                     .split("")
                     .map((letter, index) => {

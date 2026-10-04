@@ -76,7 +76,7 @@ export async function validateEmailDomain(email: string): Promise<ValidationResu
 
     // Pattern matched but not in API - still allow (new universities)
     return { valid: true };
-  } catch (error) {
+  } catch {
     // API error but pattern matched - allow with warning
     console.warn("University API unavailable, using pattern match");
     return { valid: true };
