@@ -42,7 +42,12 @@ export function useStudentVerification() {
   const { data: zeroKlueContract } = useDeployedContractInfo("ZeroKlue");
 
   const { writeContractAsync, data: writeData } = useWriteContract();
-  const { isLoading: isTxPending, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
+  const {
+    isLoading: isTxPending,
+    isSuccess: isTxSuccess,
+    isError: isTxError,
+    error: receiptError,
+  } = useWaitForTransactionReceipt({
     hash: writeData,
   });
 
@@ -126,6 +131,20 @@ export function useStudentVerification() {
       s.status === "submitting_tx" ? { ...s, status: "success", txHash: writeData || null, progress: 100 } : s,
     );
   }, [isTxSuccess, writeData]);
+
+  useEffect(() => {
+    if (!isTxError) return;
+    setState(s =>
+      s.status === "submitting_tx"
+        ? {
+            ...s,
+            status: "error",
+            error: receiptError?.message || "The transaction failed before the demo record was saved.",
+            progress: 0,
+          }
+        : s,
+    );
+  }, [isTxError, receiptError]);
 
   useEffect(() => {
     if (!isTxPending) return;
