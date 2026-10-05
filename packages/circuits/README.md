@@ -4,7 +4,7 @@
 
 The original project documentation attributes the circuit artifacts to [StealthNote](https://github.com/saleel/stealthnote). Preserve that attribution and review the upstream license when redistributing. The source imports [`noir-jwt`](https://github.com/saleel/noir-jwt).
 
-The Noir and Barretenberg toolchain was unavailable during this update, so the checked-in circuit artifact and verifier were not regenerated or compared against `src/main.nr` here. Run `build.sh` and review the resulting artifact/verifier changes before relying on a source change.
+The on-chain verifier and all checked-in verification-key copies were regenerated from the current browser circuit artifact after an end-to-end test found the old Solidity key did not match it. From `zeroklue-app`, run `yarn workspace @se-2/nextjs check:circuit-artifacts` to detect future drift. The Noir compiler is unavailable here, so `src/main.nr` was not recompiled; run `build.sh` and review its outputs before relying on future circuit-source changes.
 
 ## What the circuit checks
 

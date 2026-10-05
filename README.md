@@ -33,6 +33,8 @@ node .yarn/releases/yarn-3.2.3.cjs start
 
 Open [http://localhost:3000](http://localhost:3000), connect to the local chain, and use the verification flow. Root-level `npm run dev`, `build`, `start`, `lint`, and `typecheck` shortcuts are also available. `npm run contracts:test` runs the Foundry contract tests. The contract tests use a mock verifier to cover registry behavior; they do not test a real generated proof. The browser proof and local-chain transaction should be tried with a Google OAuth client configured for the local origin.
 
+Run `yarn workspace @se-2/nextjs check:circuit-artifacts` from `zeroklue-app` to confirm the browser circuit, verification-key files and Solidity verifier are generated from the same artifact. This catches mismatched proof-verifier deployments before starting the app.
+
 ## Scope and attribution
 
 This prototype does not include trusted-key rotation/allowlisting, a production credential policy, an independent cryptographic audit, or a production deployment. A verified registry entry means the deployed verifier accepted the submitted proof under its compiled circuit; it must not be represented as proof of university enrollment.

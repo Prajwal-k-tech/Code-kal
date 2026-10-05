@@ -27,6 +27,9 @@ node -e "const fs = require('fs'); fs.writeFileSync('../../zeroklue-app/packages
 
 echo "Generating Solidity verifier..."
 bb write_solidity_verifier -k ./target/vk -o ../../zeroklue-app/packages/foundry/contracts/HonkVerifier.sol
+cp ./target/vk ./vk/vk
+cp ./target/vk "../../zeroklue-app/packages/nextjs/public/circuits/vk"
+cp "../../zeroklue-app/packages/foundry/contracts/HonkVerifier.sol" ./HonkVerifier.sol
 
 echo "Done! Files generated:"
 echo "  - zeroklue-app/packages/nextjs/public/circuits/circuit.json"
