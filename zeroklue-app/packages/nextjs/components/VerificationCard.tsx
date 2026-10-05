@@ -105,7 +105,7 @@ export function VerificationCard() {
                 </svg>
               </motion.div>
               <h3 className="text-2xl font-bold text-white mb-2">Registry Entry Found</h3>
-              <p className="text-white/60 mb-2">The proof was verified by the circuit; issuer trust and student status are not established.</p>
+              <p className="text-white/60 mb-2">The proof used an owner-approved signing key and email domain. Current student status is not established.</p>
               {verifiedAt && (
                 <p className="text-white/40 text-sm mb-6">
                   Recorded: {new Date(Number(verifiedAt) * 1000).toLocaleDateString()}

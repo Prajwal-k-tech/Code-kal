@@ -7,11 +7,11 @@ ZeroKlue is a prototype for generating a JWT proof in the browser and checking i
 1. The browser requests a Google ID token with a nonce bound to a short-lived ephemeral key.
 2. It generates a zero-knowledge proof from the token and circuit inputs.
 3. The wallet submits the proof and its 85 public inputs to `ZeroKlue`.
-4. The contract checks the key expiry, calls the generated Honk verifier, then records the ephemeral key for that wallet. Reused keys and invalid proofs are rejected.
+4. The contract checks the ephemeral-key expiry and owner-approved signing-key and email-domain fingerprints, then calls the Honk verifier and records the key for that wallet. Reused keys and invalid proofs are rejected.
 
-The contract verifies that a proof satisfies the compiled circuit. **This is a prototype, not production student verification.** The circuit accepts a supplied RSA key and does not prove that the key belongs to Google; its domain input and `email_verified` claim therefore do not independently establish a Google-issued student credential. It also does not constrain JWT issuer, audience, or expiry. The browser fetches a Google key and checks Workspace claims locally, but callers can bypass browser code. The public-input expiry only limits the ephemeral key lifetime.
+The contract verifies the proof and checks the exposed RSA modulus and organization domain against owner-managed allowlists. Owners must source key fingerprints from Google's published JWKS and approve only intended organization domains; Google key rotation requires an allowlist update. **This is a prototype, not production student verification.** A verified Workspace email domain does not prove current enrollment, and the circuit still does not constrain JWT issuer, audience, or expiry. The public-input expiry limits only the ephemeral key lifetime.
 
-The circuit source imports [`noir-jwt`](https://github.com/saleel/noir-jwt). The compiled circuit and verification key are checked in under `zeroklue-app/packages/nextjs/public/circuits/`; the Solidity verifier is checked in under both `packages/circuits/` and `zeroklue-app/packages/foundry/contracts/`. `packages/circuits/build.sh` regenerates these outputs from the Noir package using Nargo and Barretenberg. The original project documentation attributes the circuit artifacts to [StealthNote](https://github.com/saleel/stealthnote); retain that attribution and review its license when redistributing. The Noir toolchain was unavailable for this change, so the checked-in outputs were not regenerated or compared against the source here.
+The circuit source imports [`noir-jwt`](https://github.com/saleel/noir-jwt). The compiled circuit and verification key are checked in under `zeroklue-app/packages/nextjs/public/circuits/`; the Solidity verifier is checked in under both `packages/circuits/` and `zeroklue-app/packages/foundry/contracts/`. `packages/circuits/build.sh` regenerates these outputs from the Noir package using Nargo and Barretenberg. The original project documentation attributes the circuit artifacts to [StealthNote](https://github.com/saleel/stealthnote); retain that attribution and review its license when redistributing. The circuit source compiles with Noir `1.0.0-beta.3` and reproduces the checked-in bytecode; the manifest can't pin that prerelease.
 
 ## Run locally
 
@@ -37,7 +37,7 @@ Run `yarn workspace @se-2/nextjs check:circuit-artifacts` from `zeroklue-app` to
 
 ## Scope and attribution
 
-This prototype does not include trusted-key rotation/allowlisting, a production credential policy, an independent cryptographic audit, or a production deployment. A verified registry entry means the deployed verifier accepted the submitted proof under its compiled circuit; it must not be represented as proof of university enrollment.
+This prototype has owner-managed signing-key and domain allowlists, but no automated trusted-key rotation, production credential policy, independent cryptographic audit, or production deployment. A verified registry entry means an approved-key proof for an approved email domain was accepted; it must not be represented as proof of university enrollment.
 
 - [StealthNote](https://github.com/saleel/stealthnote): upstream attribution for the circuit artifacts in the original project documentation.
 - [noir-jwt](https://github.com/saleel/noir-jwt): JWT circuit dependency.

@@ -21,7 +21,7 @@ export const Features = () => {
                     <FeatureCard
                         icon={<ShieldCheckIcon className="w-6 h-6" />}
                         title="Proof Generation Prototype"
-                        description="The contract verifies the circuit proof on-chain. The prototype does not yet establish a trusted issuer or student status."
+                        description="The contract checks owner-approved signing-key and email-domain fingerprints. It does not verify current student enrollment."
                     />
 
                     <FeatureCard
@@ -33,7 +33,7 @@ export const Features = () => {
                     <FeatureCard
                         icon={<KeyIcon className="w-6 h-6" />}
                         title="Development Status"
-                        description="JWT source, shipped circuit artifacts, and contract verification are not yet connected as a complete credential-verification flow."
+                        description="Owner approval of trusted Google keys and institution domains is required. Issuer, audience, and JWT-expiry claim checks remain out of circuit."
                     />
 
                 </div>

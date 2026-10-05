@@ -39,7 +39,7 @@ export default function MarketplacePage() {
           </h1>
 
           <p className="text-lg text-gray-300 mt-4 max-w-2xl mx-auto font-light">
-            Prototype proof gating only. The circuit does not constrain the JWT signing key to Google’s trusted keys or establish student status.
+            Demo proof gating only. The contract checks owner-approved signing-key and email-domain fingerprints; this does not establish current student enrollment.
           </p>
 
           <div className="mt-8 flex justify-center gap-4">

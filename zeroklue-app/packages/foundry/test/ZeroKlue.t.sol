@@ -28,6 +28,8 @@ contract ZeroKlueTest is Test {
     function setUp() public {
         verifier = new MockZeroKlueVerifier();
         zeroKlue = new ZeroKlue(address(verifier));
+        zeroKlue.setTrustedJwtKey(_keyLimbs(), true);
+        zeroKlue.setApprovedDomain(_domainBytes(), true);
     }
 
     function _proof() internal pure returns (bytes memory) {
@@ -36,8 +38,22 @@ contract ZeroKlueTest is Test {
 
     function _publicInputs(bytes32 ephemeralKey) internal view returns (bytes32[] memory inputs) {
         inputs = new bytes32[](85);
+        bytes32[18] memory key = _keyLimbs();
+        bytes32[64] memory domain = _domainBytes();
+        for (uint256 i = 0; i < 18; i++) inputs[i] = key[i];
+        for (uint256 i = 0; i < 64; i++) inputs[18 + i] = domain[i];
+        inputs[82] = bytes32(uint256(bytes("iiitkottayam.ac.in").length));
         inputs[83] = ephemeralKey;
         inputs[84] = bytes32(block.timestamp + 1 days);
+    }
+
+    function _keyLimbs() internal pure returns (bytes32[18] memory key) {
+        for (uint256 i = 0; i < 18; i++) key[i] = bytes32(i + 1);
+    }
+
+    function _domainBytes() internal pure returns (bytes32[64] memory domain) {
+        bytes memory text = bytes("iiitkottayam.ac.in");
+        for (uint256 i = 0; i < text.length; i++) domain[i] = bytes32(uint256(uint8(text[i])));
     }
 
     function _register(address student, bytes32 ephemeralKey) internal {
@@ -91,6 +107,30 @@ contract ZeroKlueTest is Test {
         inputs[84] = bytes32(block.timestamp);
         vm.prank(alice);
         vm.expectRevert("Ephemeral key expired");
+        zeroKlue.registerStudent(_proof(), inputs);
+    }
+
+    function test_RegisterStudent_RejectsUntrustedJwtKey() public {
+        bytes32[] memory inputs = _publicInputs(sampleEphemeralKey1);
+        inputs[0] = bytes32(uint256(99));
+        vm.prank(alice);
+        vm.expectRevert("Untrusted JWT signing key");
+        zeroKlue.registerStudent(_proof(), inputs);
+    }
+
+    function test_RegisterStudent_RejectsUnapprovedDomain() public {
+        bytes32[] memory inputs = _publicInputs(sampleEphemeralKey1);
+        inputs[18] = bytes32(uint256(uint8(bytes1("x"))));
+        vm.prank(alice);
+        vm.expectRevert("Unapproved organization domain");
+        zeroKlue.registerStudent(_proof(), inputs);
+    }
+
+    function test_RegisterStudent_RejectsInvalidDomainLength() public {
+        bytes32[] memory inputs = _publicInputs(sampleEphemeralKey1);
+        inputs[82] = bytes32(uint256(65));
+        vm.prank(alice);
+        vm.expectRevert("Invalid domain length");
         zeroKlue.registerStudent(_proof(), inputs);
     }
 
@@ -184,5 +224,12 @@ contract ZeroKlueTest is Test {
         vm.prank(bob);
         vm.expectRevert();
         zeroKlue.revokeVerification(alice);
+    }
+
+    function test_TrustConfiguration_OnlyOwner() public {
+        bytes32[18] memory key = _keyLimbs();
+        vm.prank(bob);
+        vm.expectRevert();
+        zeroKlue.setTrustedJwtKey(key, false);
     }
 }

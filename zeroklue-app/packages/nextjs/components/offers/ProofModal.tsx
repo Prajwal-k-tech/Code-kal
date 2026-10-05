@@ -45,7 +45,7 @@ export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
 
         <div className="alert alert-warning mt-4">
           <span>
-            The contract checks the proof, but the circuit does not bind its signing key to Google’s trusted keys. This is not a production student credential check.
+            The contract checks owner-approved signing-key and organization-domain fingerprints. This prototype does not verify current student enrollment.
           </span>
         </div>
 

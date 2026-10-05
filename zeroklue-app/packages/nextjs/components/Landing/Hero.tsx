@@ -46,7 +46,7 @@ export const Hero = () => {
                     {/* Right Content */}
                     <div className="flex-1 lg:pl-12 flex flex-col justify-center">
                         <p className="text-xl text-gray-200 mb-8 leading-relaxed">
-                            ZeroKlue generates a browser-side proof for a signed Workspace JWT and verifies the proof on-chain before recording a wallet. The circuit does not bind the signing key to Google’s trusted keys, so this remains a prototype.
+                            ZeroKlue proves a verified email at an owner-approved domain in the browser and checks the signing-key fingerprint on-chain. It does not prove current student enrollment.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4">

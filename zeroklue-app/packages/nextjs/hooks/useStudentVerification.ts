@@ -32,8 +32,8 @@ const initialState: StudentVerificationState = {
  * 3. Google OAuth + ZK proof generation in browser
  * 4. Submit the proof and its public inputs for on-chain verification
  *
- * The circuit does not constrain the signing key to Google's trusted keys;
- * this prototype's proof check is not a production student credential check.
+ * The contract checks configured signing-key and domain allowlists; a
+ * successful proof establishes a verified email at an approved domain, not student status.
  */
 export function useStudentVerification() {
   const [state, setState] = useState<StudentVerificationState>(initialState);

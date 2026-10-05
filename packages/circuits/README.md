@@ -4,7 +4,7 @@
 
 The original project documentation attributes the circuit artifacts to [StealthNote](https://github.com/saleel/stealthnote). Preserve that attribution and review the upstream license when redistributing. The source imports [`noir-jwt`](https://github.com/saleel/noir-jwt).
 
-The on-chain verifier and all checked-in verification-key copies were regenerated from the current browser circuit artifact after an end-to-end test found the old Solidity key did not match it. From `zeroklue-app`, run `yarn workspace @se-2/nextjs check:circuit-artifacts` to detect future drift. The Noir compiler is unavailable here, so `src/main.nr` was not recompiled; run `build.sh` and review its outputs before relying on future circuit-source changes.
+The checked-in browser artifact was reproduced from `src/main.nr` with Noir `1.0.0-beta.3`; `noir_version`, artifact hash, and bytecode match. The Solidity verifier and all verification-key copies were regenerated from that artifact after an end-to-end test found the old Solidity key did not match it. The imported `noir-jwt` dependency does not compile with newer Noir releases. Nargo's manifest constraint cannot pin a prerelease version, so use `1.0.0-beta.3` when recompiling. From `zeroklue-app`, run `yarn workspace @se-2/nextjs check:circuit-artifacts` to detect drift among generated files.
 
 ## What the circuit checks
 
@@ -12,4 +12,4 @@ The on-chain verifier and all checked-in verification-key copies were regenerate
 - `email_verified == true` and an email/domain match.
 - A JWT nonce bound to the ephemeral key, salt, and expiry.
 
-The circuit does not constrain the RSA key to Google's published keys or check JWT issuer, audience, or expiry. The browser's Google key lookup and hosted-domain check are outside the proof statement. The on-chain contract verifies the proof and rejects expired ephemeral keys, but this does not establish that the token is Google-issued or that its holder is a student. Treat the app as a prototype, not production credential verification.
+The circuit verifies the RSA signature against its public modulus input and proves a verified email ends in the public domain input. The contract now requires owner-approved fingerprints for both values before recording a wallet. Contract owners must derive signing-key fingerprints only from Google's published JWKS and approve only institutional domains they intend to accept. Key rotation requires updating the on-chain allowlist. The circuit still does not check the JWT issuer, audience, or expiry, and a verified Workspace email does not prove current student enrollment. Treat this as a prototype, not production credential verification.
