@@ -5,6 +5,7 @@ import { type CompiledCircuit, InputMap } from "@noir-lang/noir_js";
 import { generateInputs } from "noir-jwt";
 
 const MAX_DOMAIN_LENGTH = 64;
+const MAX_AUDIENCE_LENGTH = 80;
 
 // Circuit artifact is loaded from public folder
 const CIRCUIT_PATH = "/circuits/circuit.json";
@@ -21,9 +22,9 @@ export type ProofProgress = {
 export interface ContractProof {
   /** Raw proof bytes as hex string (0x...) */
   proofHex: `0x${string}`;
-  /** Public inputs as bytes32[] (85 elements) */
+  /** Public inputs as bytes32[] (167 elements) */
   publicInputs: `0x${string}`[];
-  /** The ephemeral public key for sybil resistance (index 83) */
+  /** The ephemeral public key for sybil resistance (index 164) */
   ephemeralPubkey: `0x${string}`;
 }
 
@@ -36,13 +37,27 @@ export const generateProof = async (
     jwtPubkey: JsonWebKey;
     ephemeralKey: EphemeralKey;
     domain: string;
+    audience: string;
+    jwtExpiry: number;
   },
   onProgress?: (progress: ProofProgress) => void
 ): Promise<ContractProof> => {
-  const { idToken, jwtPubkey, ephemeralKey, domain } = credential;
+  const { idToken, jwtPubkey, ephemeralKey, domain, audience, jwtExpiry } = credential;
 
   if (!idToken || !jwtPubkey) {
     throw new Error("[JWT Circuit] Proof generation failed: idToken and jwtPubkey are required");
+  }
+
+  const domainBytes = new TextEncoder().encode(domain);
+  const audienceBytes = new TextEncoder().encode(audience);
+  if (domainBytes.length === 0 || domainBytes.length > MAX_DOMAIN_LENGTH) {
+    throw new Error("[JWT Circuit] Hosted domain exceeds the circuit's byte limit");
+  }
+  if (audienceBytes.length === 0 || audienceBytes.length > MAX_AUDIENCE_LENGTH) {
+    throw new Error("[JWT Circuit] OAuth audience exceeds the circuit's byte limit");
+  }
+  if (!Number.isSafeInteger(jwtExpiry) || jwtExpiry <= 0) {
+    throw new Error("[JWT Circuit] JWT expiry must be a positive integer timestamp");
   }
 
   if (onProgress) onProgress({ stage: "loading", progress: 10, message: "Initializing circuit..." });
@@ -50,12 +65,14 @@ export const generateProof = async (
   const jwtInputs = await generateInputs({
     jwt: idToken,
     pubkey: jwtPubkey,
-    shaPrecomputeTillKeys: ["email", "email_verified", "nonce"],
+    shaPrecomputeTillKeys: ["email", "email_verified", "nonce", "iss", "aud", "exp", "hd"],
     maxSignedDataLength: 1024, // Increased from 640 to handle larger Google JWTs
   });
 
-  const domainUint8Array = new Uint8Array(MAX_DOMAIN_LENGTH);
-  domainUint8Array.set(Uint8Array.from(new TextEncoder().encode(domain)));
+  const domainInput = new Uint8Array(MAX_DOMAIN_LENGTH);
+  domainInput.set(domainBytes);
+  const audienceInput = new Uint8Array(MAX_AUDIENCE_LENGTH);
+  audienceInput.set(audienceBytes);
 
   const inputs = {
     partial_data: jwtInputs.partial_data,
@@ -68,10 +85,15 @@ export const generateProof = async (
     ephemeral_pubkey: (ephemeralKey.publicKey >> 3n).toString(),
     ephemeral_pubkey_salt: ephemeralKey.salt.toString(),
     ephemeral_pubkey_expiry: Math.floor(ephemeralKey.expiry.getTime() / 1000).toString(),
-    domain: {
-      storage: Array.from(domainUint8Array),
-      len: domain.length,
+    audience: {
+      storage: Array.from(audienceInput),
+      len: audienceBytes.length,
     },
+    domain: {
+      storage: Array.from(domainInput),
+      len: domainBytes.length,
+    },
+    jwt_expiry: jwtExpiry.toString(),
   };
 
   console.log("[ZeroKlue] JWT circuit inputs prepared");
@@ -108,8 +130,8 @@ export const generateProof = async (
   // Format for smart contract
   const proofHex = bytesToHex(proof) as `0x${string}`;
 
-  if (publicInputs.length !== 85) {
-    throw new Error(`[JWT Circuit] Expected 85 public inputs, received ${publicInputs.length}`);
+  if (publicInputs.length !== 167) {
+    throw new Error(`[JWT Circuit] Expected 167 public inputs, received ${publicInputs.length}`);
   }
 
   const formattedInputs = publicInputs.map((input: string) => {
@@ -120,8 +142,8 @@ export const generateProof = async (
     return `0x${hex.padStart(64, "0")}` as `0x${string}`;
   });
 
-  // The ephemeral public key is at index 83
-  const ephemeralPubkey = formattedInputs[83];
+  // The ephemeral public key is at index 164
+  const ephemeralPubkey = formattedInputs[164];
 
   return {
     proofHex,

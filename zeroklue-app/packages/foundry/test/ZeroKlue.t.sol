@@ -30,6 +30,7 @@ contract ZeroKlueTest is Test {
         zeroKlue = new ZeroKlue(address(verifier));
         zeroKlue.setTrustedJwtKey(_keyLimbs(), true);
         zeroKlue.setApprovedDomain(_domainBytes(), true);
+        zeroKlue.setApprovedAudience(_audienceBytes(), _audienceLength(), true);
     }
 
     function _proof() internal pure returns (bytes memory) {
@@ -37,14 +38,18 @@ contract ZeroKlueTest is Test {
     }
 
     function _publicInputs(bytes32 ephemeralKey) internal view returns (bytes32[] memory inputs) {
-        inputs = new bytes32[](85);
+        inputs = new bytes32[](167);
         bytes32[18] memory key = _keyLimbs();
         bytes32[64] memory domain = _domainBytes();
+        bytes32[80] memory audience = _audienceBytes();
         for (uint256 i = 0; i < 18; i++) inputs[i] = key[i];
         for (uint256 i = 0; i < 64; i++) inputs[18 + i] = domain[i];
         inputs[82] = bytes32(uint256(bytes("iiitkottayam.ac.in").length));
-        inputs[83] = ephemeralKey;
-        inputs[84] = bytes32(block.timestamp + 1 days);
+        for (uint256 i = 0; i < 80; i++) inputs[83 + i] = audience[i];
+        inputs[163] = bytes32(uint256(bytes("123456789012-example.apps.googleusercontent.com").length));
+        inputs[164] = ephemeralKey;
+        inputs[165] = bytes32(block.timestamp + 1 days);
+        inputs[166] = bytes32(block.timestamp + 1 hours);
     }
 
     function _keyLimbs() internal pure returns (bytes32[18] memory key) {
@@ -54,6 +59,15 @@ contract ZeroKlueTest is Test {
     function _domainBytes() internal pure returns (bytes32[64] memory domain) {
         bytes memory text = bytes("iiitkottayam.ac.in");
         for (uint256 i = 0; i < text.length; i++) domain[i] = bytes32(uint256(uint8(text[i])));
+    }
+
+    function _audienceBytes() internal pure returns (bytes32[80] memory audience) {
+        bytes memory text = bytes("123456789012-example.apps.googleusercontent.com");
+        for (uint256 i = 0; i < text.length; i++) audience[i] = bytes32(uint256(uint8(text[i])));
+    }
+
+    function _audienceLength() internal pure returns (uint256) {
+        return bytes("123456789012-example.apps.googleusercontent.com").length;
     }
 
     function _register(address student, bytes32 ephemeralKey) internal {
@@ -104,9 +118,17 @@ contract ZeroKlueTest is Test {
 
     function test_RegisterStudent_RejectsExpiredKey() public {
         bytes32[] memory inputs = _publicInputs(sampleEphemeralKey1);
-        inputs[84] = bytes32(block.timestamp);
+        inputs[165] = bytes32(block.timestamp);
         vm.prank(alice);
         vm.expectRevert("Ephemeral key expired");
+        zeroKlue.registerStudent(_proof(), inputs);
+    }
+
+    function test_RegisterStudent_RejectsExpiredJwt() public {
+        bytes32[] memory inputs = _publicInputs(sampleEphemeralKey1);
+        inputs[166] = bytes32(block.timestamp);
+        vm.prank(alice);
+        vm.expectRevert("JWT expired");
         zeroKlue.registerStudent(_proof(), inputs);
     }
 
@@ -126,6 +148,14 @@ contract ZeroKlueTest is Test {
         zeroKlue.registerStudent(_proof(), inputs);
     }
 
+    function test_RegisterStudent_RejectsUnapprovedAudience() public {
+        bytes32[] memory inputs = _publicInputs(sampleEphemeralKey1);
+        inputs[83] = bytes32(uint256(uint8(bytes1("x"))));
+        vm.prank(alice);
+        vm.expectRevert("Unapproved OAuth audience");
+        zeroKlue.registerStudent(_proof(), inputs);
+    }
+
     function test_RegisterStudent_RejectsInvalidDomainLength() public {
         bytes32[] memory inputs = _publicInputs(sampleEphemeralKey1);
         inputs[82] = bytes32(uint256(65));
@@ -134,10 +164,18 @@ contract ZeroKlueTest is Test {
         zeroKlue.registerStudent(_proof(), inputs);
     }
 
+    function test_RegisterStudent_RejectsInvalidAudienceLength() public {
+        bytes32[] memory inputs = _publicInputs(sampleEphemeralKey1);
+        inputs[163] = bytes32(uint256(81));
+        vm.prank(alice);
+        vm.expectRevert("Invalid audience length");
+        zeroKlue.registerStudent(_proof(), inputs);
+    }
+
     function test_RegisterStudent_RejectsWrongPublicInputCount() public {
         vm.prank(alice);
         vm.expectRevert("Invalid public input count");
-        zeroKlue.registerStudent(_proof(), new bytes32[](84));
+        zeroKlue.registerStudent(_proof(), new bytes32[](166));
     }
 
     function test_Reverification_UpdatesTimestamp() public {
@@ -231,5 +269,11 @@ contract ZeroKlueTest is Test {
         vm.prank(bob);
         vm.expectRevert();
         zeroKlue.setTrustedJwtKey(key, false);
+    }
+
+    function test_AudienceConfiguration_OnlyOwner() public {
+        vm.prank(bob);
+        vm.expectRevert();
+        zeroKlue.setApprovedAudience(_audienceBytes(), _audienceLength(), false);
     }
 }

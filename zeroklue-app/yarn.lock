@@ -12019,6 +12019,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"noir-jwt@patch:noir-jwt@npm%3A0.4.4#./.yarn/patches/noir-jwt-npm-0.4.4-84be7fd7be.patch::locator=se-2%40workspace%3A.":
+  version: 0.4.4
+  resolution: "noir-jwt@patch:noir-jwt@npm%3A0.4.4#./.yarn/patches/noir-jwt-npm-0.4.4-84be7fd7be.patch::version=0.4.4&hash=744bda&locator=se-2%40workspace%3A."
+  checksum: 06b303a3595d78287285d0d32efd2ec73feee2667e18833621ec8d7f54b5a3b7b682b0c756322839399cb5dd8370cdff2505a7c78f11f9a57b11edc69a3ed6e1
+  languageName: node
+  linkType: hard
+
 "nopt@npm:^5.0.0":
   version: 5.0.0
   resolution: "nopt@npm:5.0.0"

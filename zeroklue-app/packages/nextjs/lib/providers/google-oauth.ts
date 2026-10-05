@@ -3,7 +3,8 @@ import { EphemeralKey } from "../types";
 
 /**
  * Google OAuth and proof-generation flow for the ZeroKlue prototype.
- * The hosted-domain claim is checked in browser code, not proven by the circuit.
+ * Issuer, audience, expiry, hosted domain, and email verification are checked
+ * by the proof circuit; browser checks here give quicker, clearer errors.
  */
 
 export interface GoogleVerificationResult {
@@ -35,6 +36,17 @@ export async function verifyWithGoogle(ephemeralKey: EphemeralKey): Promise<Goog
   const headers = JSON.parse(atob(headersB64));
   const payload = JSON.parse(atob(payloadB64));
 
+  const expectedAudience = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  if (payload.iss !== "https://accounts.google.com" && payload.iss !== "accounts.google.com") {
+    throw new Error("Google returned an ID token with an unexpected issuer.");
+  }
+  if (!expectedAudience || payload.aud !== expectedAudience) {
+    throw new Error("Google returned an ID token for a different application.");
+  }
+  if (!Number.isSafeInteger(payload.exp) || payload.exp <= Math.floor(Date.now() / 1000)) {
+    throw new Error("Google ID token has expired or has an invalid expiry.");
+  }
+
   // Check for Google Workspace domain
   const domain = payload.hd;
   if (!domain) {
@@ -65,6 +77,8 @@ export async function verifyWithGoogle(ephemeralKey: EphemeralKey): Promise<Goog
     jwtPubkey: googleJWTPubkey,
     ephemeralKey: ephemeralKey,
     domain,
+    audience: payload.aud,
+    jwtExpiry: payload.exp,
   });
 
   console.log(`[ZeroKlue] Proof generated successfully!`);

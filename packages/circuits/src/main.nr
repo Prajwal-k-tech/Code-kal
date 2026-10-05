@@ -3,11 +3,11 @@ use std::hash::poseidon2::Poseidon2;
 
 global MAX_PARTIAL_DATA_LENGTH: u32 = 1024; // signed data length after partial SHA (increased from 640 to handle larger Google JWTs)
 global MAX_DOMAIN_LENGTH: u32 = 64;
-global MAX_EMAIL_LENGTH: u32 = 128;
+global MAX_AUDIENCE_LENGTH: u32 = 80;
 global NONCE_LENGTH: u32 = 77;
 
 /**
- * @brief Verify JWT signature (RSA/SHA256 only) and validate hd and nonce fields
+ * @brief Verify JWT signature and the Google issuer, audience, expiry, hosted domain, and nonce
  *
  * @param partial_data: OIDC JWT (id_token) base64 data (`$header.$payload`) as byte array of ascii characters
  *                      We do partial SHA on the data up to hd field outside of the circuit, to reduce constraints
@@ -21,10 +21,11 @@ global NONCE_LENGTH: u32 = 77;
  * @param jwt_pubkey_redc_params_limbs: RSA reduction parameters limbs
  * @param jwt_signature_limbs: RSA signature limbs
  * @param domain: Domain name (`hd` key) as a byte array of ascii characters padded to MAX_DOMAIN_LENGTH
+ * @param audience: Expected Google OAuth client ID from the signed `aud` claim
  * @param ephemeral_pubkey: Public key of the ephemeral keypair that is used to sign messages
  * @param ephemeral_pubkey_salt: Salt of the ephemeral keypair that is used to sign messages
  * @param ephemeral_pubkey_expiry: Expiry of the ephemeral keypair that is used to sign messages
- * @param nonce: JWT `nonce` as a byte array of ascii characters - 32 bytes
+ * @param jwt_expiry: Public Unix timestamp copied from the signed JWT `exp` claim
  **/
 fn main(
     partial_data: BoundedVec<u8, MAX_PARTIAL_DATA_LENGTH>,
@@ -35,9 +36,11 @@ fn main(
     jwt_pubkey_redc_params_limbs: [u128; 18],
     jwt_signature_limbs: [u128; 18],
     domain: pub BoundedVec<u8, MAX_DOMAIN_LENGTH>,
+    audience: pub BoundedVec<u8, MAX_AUDIENCE_LENGTH>,
     ephemeral_pubkey: pub Field,
     ephemeral_pubkey_salt: Field,
     ephemeral_pubkey_expiry: pub u32,
+    jwt_expiry: pub u64,
 ) {
     // Init JWT struct and verify signature
     let jwt = JWT::init_with_partial_hash(
@@ -50,6 +53,22 @@ fn main(
         jwt_signature_limbs,
     );
     jwt.verify();
+
+    // Google accepts the modern issuer and one legacy spelling.
+    let issuer: BoundedVec<u8, 27> = jwt.get_claim_string("iss".as_bytes());
+    let modern_issuer: BoundedVec<u8, 27> =
+        BoundedVec::from_array("https://accounts.google.com".as_bytes());
+    let legacy_issuer: BoundedVec<u8, 27> = BoundedVec::from_array("accounts.google.com".as_bytes());
+    let is_modern_issuer = issuer == modern_issuer;
+    let is_legacy_issuer = issuer == legacy_issuer;
+    assert(is_modern_issuer | is_legacy_issuer, "invalid issuer");
+
+    let token_audience: BoundedVec<u8, MAX_AUDIENCE_LENGTH> =
+        jwt.get_claim_string("aud".as_bytes());
+    assert(token_audience == audience, "invalid audience");
+
+    let token_expiry: u64 = jwt.get_claim_number("exp".as_bytes());
+    assert(token_expiry == jwt_expiry, "invalid JWT expiry");
 
     // Get nonce claim
     let nonce: BoundedVec<u8, NONCE_LENGTH> = jwt.get_claim_string("nonce".as_bytes());
@@ -66,17 +85,9 @@ fn main(
     // Assert email_verified claim
     jwt.assert_claim_bool("email_verified".as_bytes(), true);
 
-    // Get email claim
-    let email: BoundedVec<u8, MAX_EMAIL_LENGTH> = jwt.get_claim_string("email".as_bytes());
-
-    // Get domain start_index from email claim - unconstrained, but we verify the domain bytes below
-    let domain_start_index = unsafe { get_domain_start_index_in_email(email) };
-
-    // Verify domain passed is present in the email claim after the @
-    assert(email.storage()[domain_start_index - 1] == 64, "char before domain is not '@'");
-    for i in 0..MAX_DOMAIN_LENGTH {
-        assert(email.storage()[domain_start_index + i] == domain.storage()[i], "invalid domain");
-    }
+    // Google's hosted-domain claim is authoritative for Workspace membership;
+    // an email address suffix alone is not.
+    jwt.assert_claim_string("hd".as_bytes(), domain);
 }
 
 fn decimal_string_to_field<let LEN: u32>(decimal_bytes: [u8; LEN]) -> Field {
@@ -95,16 +106,4 @@ fn decimal_string_to_field<let LEN: u32>(decimal_bytes: [u8; LEN]) -> Field {
     }
 
     field
-}
-
-unconstrained fn get_domain_start_index_in_email(email: BoundedVec<u8, MAX_EMAIL_LENGTH>) -> u32 {
-    let mut domain_start_index = 0;
-    for i in 0..MAX_EMAIL_LENGTH {
-        if email.storage()[i] == ("@".as_bytes())[0] {
-            domain_start_index = i + 1;
-            break;
-        }
-    }
-
-    domain_start_index
 }

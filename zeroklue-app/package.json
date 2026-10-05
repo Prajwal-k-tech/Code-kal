@@ -56,5 +56,8 @@
   "packageManager": "yarn@3.2.3",
   "engines": {
     "node": ">=20.18.3"
+  },
+  "resolutions": {
+    "noir-jwt@0.4.4": "patch:noir-jwt@npm%3A0.4.4#./.yarn/patches/noir-jwt-npm-0.4.4-84be7fd7be.patch"
   }
 }

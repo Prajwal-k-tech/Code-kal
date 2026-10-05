@@ -1,0 +1,112 @@
+diff --git a/dist/browser/generate-inputs.js b/dist/browser/generate-inputs.js
+index 872495bc8b305d03044152700b429378444785f5..5da93abf8516f3eafc1ac2991733f14ba3ced020 100644
+--- a/dist/browser/generate-inputs.js
++++ b/dist/browser/generate-inputs.js
+@@ -75,16 +75,15 @@ export async function generateInputs({ jwt, pubkey, shaPrecomputeTillKeys, maxSi
+         };
+         inputs.partial_hash = Array.from(partialHash);
+         inputs.full_data_length = signedData.length;
+-        // when using partial hash, the data after the partial hash might not be a valid base64
+-        // we need to find an offset (1, 2, or 3) such that the remaining payload is base64 decode-able
+-        // this is the number that should be added to the "payload chunk that was included in SHA precompute"
+-        // to make it a multiple of 4
+-        // in other words, if you trim offset number of bytes from the remaining payload, it will be base64 decode-able
++        // Decode only the payload. The SHA block boundary can still be inside the
++        // header (Google's `kid` makes this common), so first skip the remaining
++        // header and the JWT separator. If hashing already reached the payload,
++        // skip only enough payload characters to resume on a base64 quartet.
+         const shaCutoffIndex = signedData.length - remainingData.length;
+-        console.log(shaCutoffIndex);
+-        const payloadBytesInShaPrecompute = shaCutoffIndex - (headerB64.length + 1);
+-        const offsetToMakeIt4x = 4 - (payloadBytesInShaPrecompute % 4);
+-        inputs.base64_decode_offset = offsetToMakeIt4x;
++        const payloadStartIndex = headerB64.length + 1;
++        inputs.base64_decode_offset = shaCutoffIndex < payloadStartIndex
++            ? payloadStartIndex - shaCutoffIndex
++            : (4 - ((shaCutoffIndex - payloadStartIndex) % 4)) % 4;
+     }
+     return inputs;
+ }
+diff --git a/dist/cjs/generate-inputs.js b/dist/cjs/generate-inputs.js
+index 73a8cefcd198a8de7ee6d0f392bccca926d25002..febaa513212cd443ad06d550614dd7b2762feaa7 100644
+--- a/dist/cjs/generate-inputs.js
++++ b/dist/cjs/generate-inputs.js
+@@ -79,16 +79,15 @@ async function generateInputs({ jwt, pubkey, shaPrecomputeTillKeys, maxSignedDat
+         };
+         inputs.partial_hash = Array.from(partialHash);
+         inputs.full_data_length = signedData.length;
+-        // when using partial hash, the data after the partial hash might not be a valid base64
+-        // we need to find an offset (1, 2, or 3) such that the remaining payload is base64 decode-able
+-        // this is the number that should be added to the "payload chunk that was included in SHA precompute"
+-        // to make it a multiple of 4
+-        // in other words, if you trim offset number of bytes from the remaining payload, it will be base64 decode-able
++        // Decode only the payload. The SHA block boundary can still be inside the
++        // header (Google's `kid` makes this common), so first skip the remaining
++        // header and the JWT separator. If hashing already reached the payload,
++        // skip only enough payload characters to resume on a base64 quartet.
+         const shaCutoffIndex = signedData.length - remainingData.length;
+-        console.log(shaCutoffIndex);
+-        const payloadBytesInShaPrecompute = shaCutoffIndex - (headerB64.length + 1);
+-        const offsetToMakeIt4x = 4 - (payloadBytesInShaPrecompute % 4);
+-        inputs.base64_decode_offset = offsetToMakeIt4x;
++        const payloadStartIndex = headerB64.length + 1;
++        inputs.base64_decode_offset = shaCutoffIndex < payloadStartIndex
++            ? payloadStartIndex - shaCutoffIndex
++            : (4 - ((shaCutoffIndex - payloadStartIndex) % 4)) % 4;
+     }
+     return inputs;
+ }
+diff --git a/dist/esm/generate-inputs.js b/dist/esm/generate-inputs.js
+index 872495bc8b305d03044152700b429378444785f5..5da93abf8516f3eafc1ac2991733f14ba3ced020 100644
+--- a/dist/esm/generate-inputs.js
++++ b/dist/esm/generate-inputs.js
+@@ -75,16 +75,15 @@ export async function generateInputs({ jwt, pubkey, shaPrecomputeTillKeys, maxSi
+         };
+         inputs.partial_hash = Array.from(partialHash);
+         inputs.full_data_length = signedData.length;
+-        // when using partial hash, the data after the partial hash might not be a valid base64
+-        // we need to find an offset (1, 2, or 3) such that the remaining payload is base64 decode-able
+-        // this is the number that should be added to the "payload chunk that was included in SHA precompute"
+-        // to make it a multiple of 4
+-        // in other words, if you trim offset number of bytes from the remaining payload, it will be base64 decode-able
++        // Decode only the payload. The SHA block boundary can still be inside the
++        // header (Google's `kid` makes this common), so first skip the remaining
++        // header and the JWT separator. If hashing already reached the payload,
++        // skip only enough payload characters to resume on a base64 quartet.
+         const shaCutoffIndex = signedData.length - remainingData.length;
+-        console.log(shaCutoffIndex);
+-        const payloadBytesInShaPrecompute = shaCutoffIndex - (headerB64.length + 1);
+-        const offsetToMakeIt4x = 4 - (payloadBytesInShaPrecompute % 4);
+-        inputs.base64_decode_offset = offsetToMakeIt4x;
++        const payloadStartIndex = headerB64.length + 1;
++        inputs.base64_decode_offset = shaCutoffIndex < payloadStartIndex
++            ? payloadStartIndex - shaCutoffIndex
++            : (4 - ((shaCutoffIndex - payloadStartIndex) % 4)) % 4;
+     }
+     return inputs;
+ }
+diff --git a/src/generate-inputs.ts b/src/generate-inputs.ts
+index 639b9ae03449de013c35a4db8664d82699a2f25a..db6830f9af1c891e86802ae804d965505342b20a 100644
+--- a/src/generate-inputs.ts
++++ b/src/generate-inputs.ts
+@@ -124,11 +124,11 @@ export async function generateInputs({
+-    // when using partial hash, the data after the partial hash might not be a valid base64
+-    // we need to find an offset (1, 2, or 3) such that the remaining payload is base64 decode-able
+-    // this is the number that should be added to the "payload chunk that was included in SHA precompute"
+-    // to make it a multiple of 4
+-    // in other words, if you trim offset number of bytes from the remaining payload, it will be base64 decode-able
++    // Decode only the payload. The SHA block boundary can still be inside the
++    // header (Google's `kid` makes this common), so first skip the remaining
++    // header and the JWT separator. If hashing already reached the payload,
++    // skip only enough payload characters to resume on a base64 quartet.
+     const shaCutoffIndex = signedData.length - remainingData.length;
+-    console.log(shaCutoffIndex);
+-    const payloadBytesInShaPrecompute = shaCutoffIndex - (headerB64.length + 1);
+-    const offsetToMakeIt4x = 4 - (payloadBytesInShaPrecompute % 4);
+-    inputs.base64_decode_offset = offsetToMakeIt4x;
++    const payloadStartIndex = headerB64.length + 1;
++    inputs.base64_decode_offset =
++      shaCutoffIndex < payloadStartIndex
++        ? payloadStartIndex - shaCutoffIndex
++        : (4 - ((shaCutoffIndex - payloadStartIndex) % 4)) % 4;
+   }
