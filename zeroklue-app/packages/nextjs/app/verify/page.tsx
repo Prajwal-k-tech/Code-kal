@@ -43,7 +43,7 @@ export default function VerifyPage() {
             Student Verification Prototype
           </h1>
           <p className="text-lg text-white/50">
-            This demo generates proof material and records a wallet key. The contract does not verify the proof, so the record does not prove student status.
+            The contract verifies the circuit proof before recording the wallet. The circuit does not bind the JWT signing key to Google’s trusted keys, so this prototype does not establish student status.
           </p>
         </div>
 

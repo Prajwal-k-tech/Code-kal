@@ -16,7 +16,7 @@ export type ProofProgress = {
 };
 
 /**
- * Generated proof material. The current ZeroKlue contract does not accept it.
+ * Proof and public inputs generated for the on-chain verifier.
  */
 export interface ContractProof {
   /** Raw proof bytes as hex string (0x...) */
@@ -108,11 +108,16 @@ export const generateProof = async (
   // Format for smart contract
   const proofHex = bytesToHex(proof) as `0x${string}`;
 
-  const formattedInputs = publicInputs.map((input: any) => {
-    if (typeof input === "string") {
-      return input.startsWith("0x") ? (input as `0x${string}`) : (`0x${input}` as `0x${string}`);
+  if (publicInputs.length !== 85) {
+    throw new Error(`[JWT Circuit] Expected 85 public inputs, received ${publicInputs.length}`);
+  }
+
+  const formattedInputs = publicInputs.map((input: string) => {
+    const hex = input.startsWith("0x") ? input.slice(2) : input;
+    if (!/^[0-9a-fA-F]{1,64}$/.test(hex)) {
+      throw new Error("[JWT Circuit] Invalid public input encoding");
     }
-    return `0x${input.toString(16).padStart(64, "0")}` as `0x${string}`;
+    return `0x${hex.padStart(64, "0")}` as `0x${string}`;
   });
 
   // The ephemeral public key is at index 83

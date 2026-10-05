@@ -39,14 +39,14 @@ export const Hero = () => {
                                 </div>
                                 <ArrowRightIcon className="w-5 h-5 text-gray-400 group-hover:text-white ml-auto" />
                             </div>
-                            <div className="mt-3 text-pink-400 text-xs font-bold uppercase">Proof is not verified by the contract</div>
+                            <div className="mt-3 text-pink-400 text-xs font-bold uppercase">Proof is checked on-chain; issuer trust is not</div>
                         </div>
                     </div>
 
                     {/* Right Content */}
                     <div className="flex-1 lg:pl-12 flex flex-col justify-center">
                         <p className="text-xl text-gray-200 mb-8 leading-relaxed">
-                            ZeroKlue is a student-status proof-generation prototype. The current contract stores a caller-supplied key without verifying a proof, so its registry flag does not establish student status.
+                            ZeroKlue generates a browser-side proof for a signed Workspace JWT and verifies the proof on-chain before recording a wallet. The circuit does not bind the signing key to Google’s trusted keys, so this remains a prototype.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4">

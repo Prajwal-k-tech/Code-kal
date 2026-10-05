@@ -30,11 +30,10 @@ const initialState: StudentVerificationState = {
  * 1. Check wallet connection
  * 2. Generate ephemeral key
  * 3. Google OAuth + ZK proof generation in browser
- * 4. Submit only the ephemeral public key to the contract
+ * 4. Submit the proof and its public inputs for on-chain verification
  *
- * The current hook does not verify the generated proof or submit it to the
- * contract. The contract accepts any unused key, so success is not proof of
- * student status.
+ * The circuit does not constrain the signing key to Google's trusted keys;
+ * this prototype's proof check is not a production student credential check.
  */
 export function useStudentVerification() {
   const [state, setState] = useState<StudentVerificationState>(initialState);
@@ -72,7 +71,7 @@ export function useStudentVerification() {
 
       setState(s => ({ ...s, progress: 30, status: "generating_proof" }));
 
-      // 3. Google OAuth and ZK proof generation. This does not verify the proof.
+      // 3. Google OAuth and ZK proof generation.
       let result: GoogleVerificationResult;
       try {
         result = await verifyWithGoogle(ephemeralKey);
@@ -89,23 +88,15 @@ export function useStudentVerification() {
         progress: 70,
       }));
 
-      // 4. Submit the ephemeral key. The contract does not verify a proof.
+      // 4. Submit proof and public inputs; the contract verifies them on-chain.
       setState(s => ({ ...s, status: "submitting_tx", progress: 85 }));
-
-      // Get ephemeral pubkey from the proof result
-      const ephemeralPubkey = result.contractProof.ephemeralPubkey as `0x${string}`;
-
-      console.log("[ZeroKlue] === CONTRACT CALL DEBUG ===");
-      console.log("[ZeroKlue] Contract address:", zeroKlueContract.address);
-      console.log("[ZeroKlue] Ephemeral pubkey:", ephemeralPubkey);
-      console.log("[ZeroKlue] Ephemeral pubkey length:", ephemeralPubkey.length);
 
       try {
         await writeContractAsync({
           address: zeroKlueContract.address,
           abi: zeroKlueContract.abi,
           functionName: "registerStudent",
-          args: [ephemeralPubkey],
+          args: [result.contractProof.proofHex, result.contractProof.publicInputs],
         });
         console.log("[ZeroKlue] Transaction submitted successfully!");
       } catch (contractError: any) {

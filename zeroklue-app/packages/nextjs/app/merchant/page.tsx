@@ -6,7 +6,7 @@ import { useStudentNFT } from "~~/hooks/scaffold-eth/useStudentNFT";
 
 /**
  * Merchant Page - Cyfrin Updraft Course
- * Demo course page with prototype registry gating; it does not verify student status.
+ * Demo course page gated by a circuit proof check; the prototype does not establish student status.
  */
 export default function MerchantPage() {
   const { hasNFT, isLoading, isConnected } = useStudentNFT();
@@ -177,8 +177,8 @@ export default function MerchantPage() {
                       <p className="text-yellow-200 font-medium">Demo student discount</p>
                       <p className="text-yellow-200/60 text-sm mt-1">
                         {isConnected
-                          ? "The prototype registry flag controls this demo state; it does not verify student status."
-                          : "Connect a wallet to try the prototype registry flow. It does not verify student status."}
+                          ? "The prototype proof check controls this demo state; it does not establish student status."
+                          : "Connect a wallet to try the on-chain proof flow. It does not establish student status."}
                       </p>
                       <Link href="/verify" className="btn btn-warning btn-sm mt-3 w-full">
                         Try Prototype Flow

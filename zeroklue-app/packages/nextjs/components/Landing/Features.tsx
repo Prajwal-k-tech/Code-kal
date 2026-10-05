@@ -21,7 +21,7 @@ export const Features = () => {
                     <FeatureCard
                         icon={<ShieldCheckIcon className="w-6 h-6" />}
                         title="Proof Generation Prototype"
-                        description="The browser can generate proof material, but the current contract does not verify it or establish student status."
+                        description="The contract verifies the circuit proof on-chain. The prototype does not yet establish a trusted issuer or student status."
                     />
 
                     <FeatureCard

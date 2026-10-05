@@ -3,11 +3,11 @@ import { EphemeralKey } from "../types";
 
 /**
  * Google OAuth and proof-generation flow for the ZeroKlue prototype.
- * The hosted-domain claim is checked in browser code, not proven on-chain.
+ * The hosted-domain claim is checked in browser code, not proven by the circuit.
  */
 
 export interface GoogleVerificationResult {
-  /** Generated proof material; the current ZeroKlue contract does not accept it */
+  /** Proof and public inputs submitted to the on-chain verifier */
   contractProof: ContractProof;
   /** The verified domain (e.g., "university.edu") */
   domain: string;
@@ -20,7 +20,7 @@ export interface GoogleVerificationResult {
 /**
  * Prototype flow: OAuth → JWT → generated ZK proof material
  * @param ephemeralKey - Generated ephemeral key to bind proof to wallet
- * @returns OAuth data and generated proof material; no on-chain proof verification occurs
+ * @returns OAuth data and proof material for the wallet transaction
  */
 export async function verifyWithGoogle(ephemeralKey: EphemeralKey): Promise<GoogleVerificationResult> {
   // Load Google OAuth script

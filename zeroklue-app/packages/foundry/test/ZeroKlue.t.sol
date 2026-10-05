@@ -8,8 +8,15 @@ import {ZeroKlue} from "../contracts/ZeroKlue.sol";
  * @title ZeroKlue Test Suite (Simplified)
  * @notice Tests for the ZeroKlue student verification contract with client-side verification model
  */
+contract MockZeroKlueVerifier {
+    function verify(bytes calldata proof, bytes32[] calldata) external pure returns (bool) {
+        return keccak256(proof) == keccak256(hex"01");
+    }
+}
+
 contract ZeroKlueTest is Test {
     ZeroKlue public zeroKlue;
+    MockZeroKlueVerifier public verifier;
     
     address public alice = address(0x1);
     address public bob = address(0x2);
@@ -19,14 +26,29 @@ contract ZeroKlueTest is Test {
     bytes32 public sampleEphemeralKey3 = bytes32(uint256(0x112233445566));
     
     function setUp() public {
-        zeroKlue = new ZeroKlue();
+        verifier = new MockZeroKlueVerifier();
+        zeroKlue = new ZeroKlue(address(verifier));
+    }
+
+    function _proof() internal pure returns (bytes memory) {
+        return hex"01";
+    }
+
+    function _publicInputs(bytes32 ephemeralKey) internal view returns (bytes32[] memory inputs) {
+        inputs = new bytes32[](85);
+        inputs[83] = ephemeralKey;
+        inputs[84] = bytes32(block.timestamp + 1 days);
+    }
+
+    function _register(address student, bytes32 ephemeralKey) internal {
+        vm.prank(student);
+        zeroKlue.registerStudent(_proof(), _publicInputs(ephemeralKey));
     }
 
     // ============ Registration Tests ============
 
     function test_RegisterStudent_Success() public {
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
         assertTrue(zeroKlue.isVerified(alice));
         assertEq(zeroKlue.balanceOf(alice), 1);
@@ -34,15 +56,13 @@ contract ZeroKlueTest is Test {
     }
 
     function test_RegisterStudent_EmitsEvent() public {
-        vm.prank(alice);
         vm.expectEmit(true, false, false, true);
         emit ZeroKlue.StudentVerified(alice, sampleEphemeralKey1, block.timestamp);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
     }
 
     function test_RegisterStudent_StoresCorrectData() public {
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
         (uint256 verifiedAt, bytes32 ephemeralPubkey, uint256 age) = zeroKlue.getVerification(alice);
         
@@ -52,25 +72,43 @@ contract ZeroKlueTest is Test {
     }
 
     function test_RegisterStudent_RejectsReusedEphemeralKey() public {
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
         vm.prank(bob);
         vm.expectRevert("Ephemeral key already used");
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        zeroKlue.registerStudent(_proof(), _publicInputs(sampleEphemeralKey1));
+    }
+
+    function test_RegisterStudent_RejectsInvalidProof() public {
+        bytes32[] memory inputs = _publicInputs(sampleEphemeralKey1);
+        vm.prank(alice);
+        vm.expectRevert("Invalid proof");
+        zeroKlue.registerStudent(hex"02", inputs);
+    }
+
+    function test_RegisterStudent_RejectsExpiredKey() public {
+        bytes32[] memory inputs = _publicInputs(sampleEphemeralKey1);
+        inputs[84] = bytes32(block.timestamp);
+        vm.prank(alice);
+        vm.expectRevert("Ephemeral key expired");
+        zeroKlue.registerStudent(_proof(), inputs);
+    }
+
+    function test_RegisterStudent_RejectsWrongPublicInputCount() public {
+        vm.prank(alice);
+        vm.expectRevert("Invalid public input count");
+        zeroKlue.registerStudent(_proof(), new bytes32[](84));
     }
 
     function test_Reverification_UpdatesTimestamp() public {
         // First registration
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
         // Time passes
         vm.warp(block.timestamp + 30 days);
         
         // Re-registration with new key
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey2);
+        _register(alice, sampleEphemeralKey2);
         
         (uint256 verifiedAt, bytes32 ephemeralPubkey, ) = zeroKlue.getVerification(alice);
         assertEq(verifiedAt, block.timestamp);
@@ -85,22 +123,19 @@ contract ZeroKlueTest is Test {
     function test_IsVerified() public {
         assertFalse(zeroKlue.isVerified(alice));
         
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
         assertTrue(zeroKlue.isVerified(alice));
     }
 
     function test_IsRecentlyVerified_True() public {
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
         assertTrue(zeroKlue.isRecentlyVerified(alice, 365 days));
     }
 
     function test_IsRecentlyVerified_False_AfterExpiry() public {
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
         // Time passes beyond maxAge
         vm.warp(block.timestamp + 366 days);
@@ -111,8 +146,7 @@ contract ZeroKlueTest is Test {
     function test_BalanceOf() public {
         assertEq(zeroKlue.balanceOf(alice), 0);
         
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
         assertEq(zeroKlue.balanceOf(alice), 1);
     }
@@ -123,11 +157,9 @@ contract ZeroKlueTest is Test {
     }
 
     function test_MultipleUsers() public {
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
-        vm.prank(bob);
-        zeroKlue.registerStudent(sampleEphemeralKey2);
+        _register(bob, sampleEphemeralKey2);
         
         assertTrue(zeroKlue.isVerified(alice));
         assertTrue(zeroKlue.isVerified(bob));
@@ -137,8 +169,7 @@ contract ZeroKlueTest is Test {
     // ============ Admin Tests ============
 
     function test_RevokeVerification() public {
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
         assertTrue(zeroKlue.isVerified(alice));
         
@@ -148,8 +179,7 @@ contract ZeroKlueTest is Test {
     }
 
     function test_RevokeVerification_OnlyOwner() public {
-        vm.prank(alice);
-        zeroKlue.registerStudent(sampleEphemeralKey1);
+        _register(alice, sampleEphemeralKey1);
         
         vm.prank(bob);
         vm.expectRevert();

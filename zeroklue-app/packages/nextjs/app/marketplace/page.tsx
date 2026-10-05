@@ -39,7 +39,7 @@ export default function MarketplacePage() {
           </h1>
 
           <p className="text-lg text-gray-300 mt-4 max-w-2xl mx-auto font-light">
-            Prototype registry gating only. A stored flag does not verify a student credential or eligibility for real benefits.
+            Prototype proof gating only. The circuit does not constrain the JWT signing key to Google’s trusted keys or establish student status.
           </p>
 
           <div className="mt-8 flex justify-center gap-4">
@@ -70,7 +70,7 @@ export default function MarketplacePage() {
           <div className="text-center mt-10">
             <p className="text-sm text-gray-400">
               {isUnlocked
-                ? "Demo offers unlocked by the registry flag. This flag does not prove student eligibility."
+                ? "Demo offers unlocked after on-chain proof verification. The prototype does not establish student eligibility."
                 : "Hover over the stack to reveal the demo offers."}
             </p>
           </div>

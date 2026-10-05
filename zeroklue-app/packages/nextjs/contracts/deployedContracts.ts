@@ -11,8 +11,15 @@ const deployedContracts = {
       abi: [
         {
           type: "constructor",
-          inputs: [],
+          inputs: [{ name: "verifierAddress", type: "address", internalType: "address" }],
           stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "verifier",
+          inputs: [],
+          outputs: [{ name: "", type: "address", internalType: "contract IZeroKlueVerifier" }],
+          stateMutability: "view",
         },
         {
           type: "function",
@@ -151,11 +158,8 @@ const deployedContracts = {
           type: "function",
           name: "registerStudent",
           inputs: [
-            {
-              name: "ephemeralPubkey",
-              type: "bytes32",
-              internalType: "bytes32",
-            },
+            { name: "proof", type: "bytes", internalType: "bytes" },
+            { name: "publicInputs", type: "bytes32[]", internalType: "bytes32[]" },
           ],
           outputs: [],
           stateMutability: "nonpayable",

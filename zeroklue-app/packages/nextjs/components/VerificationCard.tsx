@@ -105,7 +105,7 @@ export function VerificationCard() {
                 </svg>
               </motion.div>
               <h3 className="text-2xl font-bold text-white mb-2">Registry Entry Found</h3>
-              <p className="text-white/60 mb-2">This prototype record does not verify student status.</p>
+              <p className="text-white/60 mb-2">The proof was verified by the circuit; issuer trust and student status are not established.</p>
               {verifiedAt && (
                 <p className="text-white/40 text-sm mb-6">
                   Recorded: {new Date(Number(verifiedAt) * 1000).toLocaleDateString()}
@@ -126,7 +126,7 @@ export function VerificationCard() {
             <div className="flex items-start justify-between mb-10">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-1">Prototype Registry</h2>
-                <p className="text-white/50 text-sm">This flow does not verify student status.</p>
+                <p className="text-white/50 text-sm">The circuit proof is checked on-chain; the issuer key is not constrained to Google.</p>
               </div>
               {/* Only show wallet address when connected - no duplicate connect button */}
               {isConnected && (

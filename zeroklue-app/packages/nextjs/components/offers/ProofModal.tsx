@@ -10,8 +10,7 @@ interface ProofModalProps {
 }
 
 /**
- * Runs the same OAuth and browser proof-generation flow as the verification
- * page. The current contract stores a demo key and does not verify the proof.
+ * Runs OAuth and generates a proof in the browser; the contract verifies it before saving the wallet record.
  */
 export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
   const { verify, status, error, domain, txHash, progress, isLoading } = useStudentVerification();
@@ -30,9 +29,9 @@ export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
       : status === "generating_proof"
         ? "Generate proof in this browser"
         : status === "submitting_tx"
-          ? "Record a demo key on-chain"
+          ? "Verify proof on-chain"
           : status === "success"
-            ? "Demo record saved"
+            ? "Proof verified and recorded"
             : status === "error"
               ? "Could not finish the prototype"
               : "Connect a wallet to begin";
@@ -46,8 +45,7 @@ export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
 
         <div className="alert alert-warning mt-4">
           <span>
-            The browser generates proof material, but the contract does not verify it. A recorded key is not proof of
-            student status.
+            The contract checks the proof, but the circuit does not bind its signing key to Google’s trusted keys. This is not a production student credential check.
           </span>
         </div>
 
@@ -71,7 +69,7 @@ export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
               {domain && <p className="text-center text-sm text-base-content/60 mt-1">Workspace domain: {domain}</p>}
               {status === "submitting_tx" && (
                 <p className="text-center text-sm text-base-content/60 mt-2">
-                  The transaction only records a key; it does not submit or verify the proof.
+                  The transaction submits the proof and public inputs for on-chain verification.
                 </p>
               )}
               {txHash && (
