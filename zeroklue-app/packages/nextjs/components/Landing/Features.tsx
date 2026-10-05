@@ -21,7 +21,7 @@ export const Features = () => {
                     <FeatureCard
                         icon={<ShieldCheckIcon className="w-6 h-6" />}
                         title="Proof Generation Prototype"
-                        description="The contract checks owner-approved signing-key and email-domain fingerprints. It does not verify current student enrollment."
+                        description="The browser proves selected Google ID-token claims, and the contract checks the approved signing key, Workspace domain, OAuth audience, and expiry. This does not verify current student enrollment."
                     />
 
                     <FeatureCard
@@ -33,7 +33,7 @@ export const Features = () => {
                     <FeatureCard
                         icon={<KeyIcon className="w-6 h-6" />}
                         title="Development Status"
-                        description="Owner approval of trusted Google keys and institution domains is required. Issuer, audience, and JWT-expiry claim checks remain out of circuit."
+                        description="Owners approve Google signing keys, Workspace domains, and OAuth client IDs. Key rotation and allowlist updates are manual."
                     />
 
                 </div>

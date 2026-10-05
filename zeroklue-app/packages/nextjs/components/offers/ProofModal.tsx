@@ -45,7 +45,7 @@ export function ProofModal({ onClose, onSuccess }: ProofModalProps) {
 
         <div className="alert alert-warning mt-4">
           <span>
-            The contract checks owner-approved signing-key and organization-domain fingerprints. This prototype does not verify current student enrollment.
+            The contract checks owner-approved Google signing keys, Workspace domains, OAuth audiences, and token expiry. This prototype does not verify current student enrollment.
           </span>
         </div>
 

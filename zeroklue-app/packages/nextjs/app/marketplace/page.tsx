@@ -39,7 +39,7 @@ export default function MarketplacePage() {
           </h1>
 
           <p className="text-lg text-gray-300 mt-4 max-w-2xl mx-auto font-light">
-            Demo proof gating only. The contract checks owner-approved signing-key and email-domain fingerprints; this does not establish current student enrollment.
+            Demo proof gating only. Google token checks and the on-chain registry do not establish current student enrollment.
           </p>
 
           <div className="mt-8 flex justify-center gap-4">

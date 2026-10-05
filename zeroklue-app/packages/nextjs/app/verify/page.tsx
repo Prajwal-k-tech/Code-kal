@@ -43,7 +43,7 @@ export default function VerifyPage() {
             Student Verification Prototype
           </h1>
           <p className="text-lg text-white/50">
-            The contract accepts only owner-approved JWT signing-key and email-domain fingerprints. This prototype does not verify current student enrollment.
+            The proof checks Google token claims and the contract checks owner-approved signing keys, Workspace domains, OAuth audiences, and expiry. This prototype does not verify current student enrollment.
           </p>
         </div>
 
