@@ -1,53 +1,78 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
-echo "start up..."
+ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+APP_DIR="$ROOT_DIR/zeroklue-app"
+YARN_CLI="$APP_DIR/.yarn/releases/yarn-3.2.3.cjs"
+RPC_URL="http://127.0.0.1:8545"
+ANVIL_LOG="$(mktemp "${TMPDIR:-/tmp}/zeroklue-anvil.XXXXXX.log")"
+ANVIL_PID=""
 
-# Kill existing processes
-pkill -f anvil || true
-pkill -f "next dev" || true
-pkill -f "yarn start" || true
-pkill -f "yarn next" || true
+cleanup() {
+  if [[ -n "$ANVIL_PID" ]] && kill -0 "$ANVIL_PID" 2>/dev/null; then
+    kill "$ANVIL_PID" 2>/dev/null || true
+    wait "$ANVIL_PID" 2>/dev/null || true
+  fi
+  rm -f "$ANVIL_LOG"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-# 1. Start Anvil (Local Chain)
-echo "Starting Anvil..."
-cd zeroklue-app
-anvil --code-size-limit 100000 --port 8545 --host 0.0.0.0 --allow-origin '*' > /dev/null 2>&1 &
-ANVIL_PID=$!
-cd ..
-
-# Wait for Anvil to be ready
-echo "Waiting for Anvil..."
-while ! nc -z localhost 8545; do   
-  sleep 1
+for tool in node anvil cast forge ps; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    printf 'Missing required command: %s\n' "$tool" >&2
+    exit 1
+  fi
 done
-echo "Anvil is ready!"
 
-# 2. Deploy Contracts (Using Scaffold-ETH script to update frontend config)
-echo "Deploying Contracts..."
-cd zeroklue-app
-yarn foundry:clean  # Clean stale artifacts
-yarn deploy         # Deploys HonkVerifier + ZeroKlue and updates deployedContracts.ts
+if [[ ! -f "$YARN_CLI" ]]; then
+  printf 'Pinned Yarn release is missing: %s\n' "$YARN_CLI" >&2
+  exit 1
+fi
 
-# 3. Fund Burner Wallets
-# Anvil account 0 has 10000 ETH - we'll fund known test addresses
-echo "Funding test accounts with 1000 ETH each..."
+run_yarn() {
+  node "$YARN_CLI" "$@"
+}
 
+cd "$APP_DIR"
+printf 'Starting a local Anvil chain on 127.0.0.1:8545...\n'
+anvil --code-size-limit 100000 --port 8545 --host 127.0.0.1 >"$ANVIL_LOG" 2>&1 &
+ANVIL_PID=$!
+
+ready=false
+for _ in {1..50}; do
+  process_state="$(ps -o stat= -p "$ANVIL_PID" 2>/dev/null | tr -d '[:space:]' || true)"
+  if [[ -z "$process_state" || "$process_state" == Z* ]] || ! kill -0 "$ANVIL_PID" 2>/dev/null; then
+    printf 'Anvil failed to start. Log:\n' >&2
+    cat "$ANVIL_LOG" >&2
+    exit 1
+  fi
+  if cast rpc web3_clientVersion --rpc-url "$RPC_URL" >/dev/null 2>&1; then
+    ready=true
+    break
+  fi
+  sleep 0.2
+done
+
+if [[ "$ready" != true ]]; then
+  printf 'Timed out waiting for the local Anvil chain. Log:\n' >&2
+  cat "$ANVIL_LOG" >&2
+  exit 1
+fi
+
+printf 'Deploying local contracts...\n'
+run_yarn foundry:clean
+run_yarn deploy
+
+# This is Anvil's published throwaway account key; the RPC is loopback-only.
 ANVIL_PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-FUND_AMOUNT="1000ether"
+for wallet in \
+  0xfb48fbA511C33bAB53a5e33f439D3a2C9971cdAd \
+  0x70997970C51812dc3A010C7d01b50e0d17dc79C8 \
+  0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; do
+  cast send "$wallet" --value 1000ether --private-key "$ANVIL_PRIVATE_KEY" --rpc-url "$RPC_URL" >/dev/null
+done
 
-# Fund known burner wallet address (from previous runs)
-cast send 0xfb48fbA511C33bAB53a5e33f439D3a2C9971cdAd --value $FUND_AMOUNT --private-key $ANVIL_PRIVATE_KEY --rpc-url http://127.0.0.1:8545 >/dev/null 2>&1 || true
-
-# Fund a few more common test addresses
-cast send 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 --value $FUND_AMOUNT --private-key $ANVIL_PRIVATE_KEY --rpc-url http://127.0.0.1:8545 >/dev/null 2>&1 || true
-cast send 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC --value $FUND_AMOUNT --private-key $ANVIL_PRIVATE_KEY --rpc-url http://127.0.0.1:8545 >/dev/null 2>&1 || true
-
-echo "Contracts Deployed!"
-echo ""
-echo "💡 TIP: If your burner wallet has 0 ETH, run this in another terminal:"
-echo "   cast send YOUR_WALLET_ADDRESS --value 1000ether --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545"
-echo ""
-
-# 4. Start Frontend
-echo "Starting Frontend..."
-yarn start  # Runs 'next dev' from root workspace logic
+printf 'Local contracts are deployed. Starting the app at http://localhost:3000\n'
+run_yarn start
