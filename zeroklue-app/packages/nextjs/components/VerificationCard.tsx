@@ -126,7 +126,7 @@ export function VerificationCard() {
             <div className="flex items-start justify-between mb-10">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-1">Prototype Registry</h2>
-                <p className="text-white/50 text-sm">The circuit proof is checked on-chain; the issuer key is not constrained to Google.</p>
+                <p className="text-white/50 text-sm">The proof is checked on-chain against owner-approved Google signing keys, Workspace domains and OAuth audiences.</p>
               </div>
               {/* Only show wallet address when connected - no duplicate connect button */}
               {isConnected && (

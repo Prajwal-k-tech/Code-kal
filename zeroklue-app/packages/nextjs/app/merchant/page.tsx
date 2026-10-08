@@ -211,7 +211,7 @@ export default function MerchantPage() {
               <div className="inline-flex items-center gap-2 bg-white/10 px-6 py-3 rounded-full">
                 <span className="text-white/60">Powered by</span>
                 <span className="font-bold text-white">ZeroKlue</span>
-                <span className="text-white/60">• Student verification is not implemented</span>
+                <span className="text-white/60">• Demo only; current enrollment is not verified</span>
               </div>
             </div>
           </div>

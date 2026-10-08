@@ -75,4 +75,4 @@ for wallet in \
 done
 
 printf 'Local contracts are deployed. Starting the app at http://localhost:3000\n'
-run_yarn start
+run_yarn start --hostname 127.0.0.1

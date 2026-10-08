@@ -10,7 +10,8 @@ const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata = getMetadata({
   title: "ZeroKlue",
-  description: "Student credential proof-generation prototype; on-chain verification is not implemented.",
+  description:
+    "Zero-knowledge Google Workspace proof prototype with on-chain checks for approved token claims; it does not verify current student enrollment.",
 });
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {

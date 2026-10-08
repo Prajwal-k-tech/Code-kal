@@ -20,9 +20,12 @@ Requirements: Node.js 20.18.3+, the checked-in Yarn 3.2.3 release, and Foundry/A
 
 ```bash
 git clone --recurse-submodules https://github.com/Prajwal-k-tech/Code-kal.git
-cd Code-kal/zeroklue-app
+cd Code-kal
+cd zeroklue-app
 node .yarn/releases/yarn-3.2.3.cjs install --immutable
 ```
+
+The local chain binds to loopback and uses Anvil’s published test account without creating or overwriting a user keystore. The increased local contract-size limit supports the prototype verifier; it does not establish deployability on public networks.
 
 Run these from `zeroklue-app` in separate terminals:
 
@@ -32,7 +35,7 @@ node .yarn/releases/yarn-3.2.3.cjs deploy
 node .yarn/releases/yarn-3.2.3.cjs start
 ```
 
-Open [http://localhost:3000](http://localhost:3000), connect to the local chain, and use the verification flow. Root-level `npm run dev`, `build`, `start`, `lint`, and `typecheck` shortcuts are also available. `npm run contracts:test` runs the Foundry tests: most use a mock verifier for fast registry checks, and one exercises the real Solidity verifier with a synthetic proof fixture. The browser proof and local-chain transaction should be tried with a Google OAuth client configured for the local origin.
+Open [http://localhost:3000](http://localhost:3000), connect to the local chain, and use the verification flow. Root-level `npm run dev`, `build`, `start`, `lint`, and `typecheck` shortcuts are also available. `npm run contracts:test` runs the Foundry tests: most use a mock verifier for fast registry checks, and one exercises the real Solidity verifier with a synthetic proof fixture. The full browser OAuth-to-proof-to-local-chain flow has not been independently verified end to end; configure a Google OAuth client for the local origin to try it.
 
 Before registration can succeed, the owner must configure the verifier's allowlists on the local deployment. Set `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `ZERO_KLUE_WORKSPACE_DOMAIN`, and `ZERO_KLUE_ADMIN_PRIVATE_KEY` in `packages/nextjs/.env.local` (use the first Anvil account printed by `yarn chain`), then run `yarn allowlist:local` from `zeroklue-app/packages/nextjs`. The script reads the deployed local contract address from `contracts/deployedContracts.ts`, fetches Google's current RS256 JWKS keys, and approves those key fingerprints plus the configured Workspace domain and OAuth audience. It refuses to write to a non-local chain. On a later key rotation, approve the new JWKS keys and revoke any retired fingerprints with the owner account. Never use the sample Anvil key or this local configuration on a public network.
 

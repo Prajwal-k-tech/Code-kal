@@ -39,7 +39,7 @@ export const Hero = () => {
                                 </div>
                                 <ArrowRightIcon className="w-5 h-5 text-gray-400 group-hover:text-white ml-auto" />
                             </div>
-                            <div className="mt-3 text-pink-400 text-xs font-bold uppercase">Proof is checked on-chain; issuer trust is not</div>
+                            <div className="mt-3 text-pink-400 text-xs font-bold uppercase">On-chain proof checks use owner-approved Google keys</div>
                         </div>
                     </div>
 
