@@ -50,3 +50,7 @@ This prototype has owner-managed signing-key, domain, and OAuth-audience allowli
 - [StealthNote](https://github.com/saleel/stealthnote): upstream attribution for the circuit artifacts in the original project documentation.
 - [noir-jwt](https://github.com/saleel/noir-jwt): JWT circuit dependency.
 - [Scaffold-ETH 2](https://scaffoldeth.io/): web application framework.
+
+## Recovery
+
+See [RECOVERY.md](RECOVERY.md) for rebuilding an offloaded checkout and restoring its dependencies/data.
